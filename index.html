@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Ahamed Cabs - Ride Estimator</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6C63FF;
+      --surface: #ffffff;
+      --bg: #f4f4fb;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --danger: #ef4444;
+      --wa: #25D366;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(108,99,255,0.10);
+      --nav-h: 64px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: calc(var(--nav-h) + 16px);
+    }
+
+    /* Header */
+    header {
+      background: var(--primary);
+      color: #fff;
+      padding: 16px 20px 14px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 12px rgba(108,99,255,0.3);
+    }
+    .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .tagline { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+    /* Card */
+    .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px; margin: 16px 14px; }
+
+    /* Input group */
+    .input-group { margin-bottom: 12px; position: relative; }
+    .input-group label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 5px; display: block; }
+    .input-with-icon { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 10px; background: #fafafa; overflow: hidden; transition: border-color 0.2s; }
+    .input-with-icon:focus-within { border-color: var(--primary); background: #fff; }
+    .input-icon { width: 40px; text-align: center; font-size: 16px; flex-shrink: 0; }
+    .input-with-icon input { flex: 1; border: none; background: transparent; padding: 12px 10px 12px 0; font-size: 15px; color: var(--text); outline: none; width: 100%; }
+    .input-with-icon input::placeholder { color: #b0b3be; }
+    .clear-btn { width: 32px; text-align: center; cursor: pointer; color: #b0b3be; font-size: 18px; padding: 0 4px; }
+
+    /* Suggestions */
+    .suggestions { position: absolute; left: 0; right: 0; background: #fff; border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; z-index: 2000; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
+    .suggestions div { padding: 11px 14px; font-size: 14px; cursor: pointer; border-bottom: 1px solid var(--border); line-height: 1.4; }
+    .suggestions div:last-child { border-bottom: none; }
+    .suggestions div:hover { background: #f0eeff; }
+    .sug-main { font-weight: 500; color: var(--text); }
+    .sug-sub { font-size: 12px; color: var(--muted); }
+
+    /* Swap */
+    .swap-row { display: flex; justify-content: center; margin: -4px 0 4px; }
+    .swap-btn { background: var(--primary); border: none; border-radius: 50%; width: 32px; height: 32px; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(108,99,255,0.3); }
+
+    /* Vehicle row */
+    .vehicle-row { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
+    .vehicle-row::-webkit-scrollbar { display: none; }
+    .veh-btn { flex-shrink: 0; min-width: 78px; border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 6px; cursor: pointer; background: #fafafa; text-align: center; transition: all 0.18s; }
+    .veh-btn.active { border-color: var(--primary); background: #f0eeff; color: var(--primary); }
+    .veh-btn .veh-icon { font-size: 22px; }
+    .veh-btn .veh-name { font-size: 11px; font-weight: 600; margin-top: 2px; }
+    .veh-btn .veh-rate { font-size: 10px; color: var(--muted); }
+
+    /* Calc button */
+    .calc-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(108,99,255,0.35); transition: transform 0.1s; }
+    .calc-btn:active { transform: scale(0.98); }
+    .calc-btn:disabled { background: #c0bdf5; cursor: not-allowed; box-shadow: none; }
+
+    /* Map */
+    #map { height: 280px; border-radius: var(--radius); margin: 0 14px; overflow: hidden; box-shadow: var(--shadow); display: none; }
+
+    /* Results */
+    .results-card { display: none; }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-box { background: var(--bg); border-radius: 10px; padding: 12px 10px; text-align: center; }
+    .stat-val { font-size: 20px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .fare-box { grid-column: span 2; background: linear-gradient(135deg, var(--primary), #9c96ff); color: #fff; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .fare-box .fare-label { font-size: 13px; opacity: 0.85; }
+    .fare-box .fare-amount { font-size: 28px; font-weight: 800; }
+    .fare-box .fare-vehicle { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+
+    /* Toll */
+    .toll-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
+    .toll-row.has-toll { background: #fff7ed; color: #b45309; border: 1px solid #fde68a; }
+    .toll-row.no-toll  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .toll-notice { display: flex; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: #92400e; line-height: 1.5; }
+
+    /* Spinner / Error */
+    .spinner-wrap { display: none; justify-content: center; align-items: center; padding: 20px; gap: 12px; color: var(--muted); font-size: 14px; }
+    .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { display: none; background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); border-radius: 10px; padding: 12px 14px; font-size: 13px; margin-top: 10px; }
+    .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+
+    /* Contact */
+    .phone-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; margin-bottom: 10px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--muted); }
+    .phone-row a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .whatsapp-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--wa); color: #fff; text-decoration: none; border-radius: 12px; padding: 14px 16px; font-size: 16px; font-weight: 700; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(37,211,102,0.35); }
+    .contact-form input, .contact-form select, .contact-form textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 12px; font-size: 14px; color: var(--text); background: #fafafa; outline: none; margin-bottom: 10px; font-family: inherit; transition: border-color 0.2s; }
+    .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { border-color: var(--primary); background: #fff; }
+    .contact-form textarea { resize: none; height: 68px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .two-col input { margin-bottom: 0 !important; }
+    .submit-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(108,99,255,0.35); }
+
+    /* Footer */
+    .footer-note { text-align: center; font-size: 11px; color: var(--muted); padding: 8px 16px 6px; }
+
+    /* Confirmation panel */
+    .confirm-row { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; }
+    .confirm-row:last-child { border-bottom:none; }
+    .cr-label { color:var(--muted); font-size:13px; flex-shrink:0; }
+    .cr-val { text-align:right; font-weight:500; word-break:break-word; max-width:60%; }
+    .confirm-fare-box { background:linear-gradient(135deg,var(--primary),#9c96ff); color:#fff; border-radius:12px; padding:14px 16px; margin:14px 0; }
+    .cfl { font-size:13px; opacity:0.85; margin-bottom:4px; }
+    .cfa { font-size:28px; font-weight:800; min-height:36px; display:flex; align-items:center; gap:8px; }
+    .cfs { font-size:11px; opacity:0.75; margin-top:2px; }
+    .cfn { font-size:11px; margin-top:8px; background:rgba(0,0,0,0.15); border-radius:6px; padding:5px 8px; }
+    .edit-back-btn { width:100%; background:#f3f4f6; color:var(--text); border:none; border-radius:12px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:8px; }
+    .call-note { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 14px; margin-top:12px; font-size:13px; color:#166534; line-height:1.6; display:flex; gap:8px; align-items:flex-start; }
+
+    /* Book buttons row */
+    .book-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+    .book-wa-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--wa); color: #fff; border: none; border-radius: 12px; padding: 14px 10px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(37,211,102,0.3); }
+    .book-wa-btn:active { filter: brightness(0.92); }
+    .book-call-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 14px 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; box-shadow: 0 4px 16px rgba(108,99,255,0.25); }
+    .book-call-btn:active { filter: brightness(0.92); }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 9999;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.07);
+      transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    }
+    .bottom-nav.nav-hidden { transform: translateY(calc(var(--nav-h) - 22px)); }
+    .nav-handle {
+      position: absolute;
+      top: -22px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+      padding: 5px 18px 2px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      box-shadow: 0 -3px 10px rgba(0,0,0,0.06);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      padding: 6px 4px;
+    }
+    .nav-item .n-icon { font-size: 21px; line-height: 1; }
+    .nav-item.active, .nav-item:active { color: var(--primary); }
+
+    /* ── Bottom Sheet ── */
+    .sheet {
+      position: fixed;
+      bottom: var(--nav-h);
+      left: 0; right: 0;
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.14);
+      z-index: 9998;
+      max-height: 72vh;
+      overflow-y: auto;
+      padding: 0 16px 24px;
+      transform: translateY(110%);
+      transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+    }
+    .sheet.open { transform: translateY(0); }
+    .sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 14px; }
+    .sheet-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+
+    /* Cars sheet */
+    .car-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .car-card { border: 1.5px solid var(--border); border-radius: 12px; padding: 12px 10px; text-align: center; background: #fafafa; }
+    .car-card .cc-icon { font-size: 28px; }
+    .car-card .cc-name { font-size: 13px; font-weight: 700; margin-top: 4px; }
+    .car-card .cc-desc { font-size: 11px; color: var(--muted); }
+    .car-card .cc-price { margin-top: 8px; background: #f0eeff; color: var(--primary); border-radius: 8px; padding: 4px 6px; font-size: 12px; font-weight: 600; }
+
+    /* More sheet */
+    .more-list { list-style: none; }
+    .more-list li a { display: flex; align-items: center; gap: 12px; padding: 14px 2px; border-bottom: 1px solid var(--border); text-decoration: none; color: var(--text); font-size: 15px; }
+    .more-list li:last-child a { border-bottom: none; }
+    .ml-icon { font-size: 20px; width: 28px; text-align: center; }
+    .ml-text { font-weight: 500; }
+    .ml-sub { font-size: 12px; color: var(--muted); }
+
+    /* Overlay */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9997; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .overlay.show { opacity: 1; pointer-events: all; }
+
+    .leaflet-routing-container { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">🚖 Ahamed Cabs</div>
+    <div class="tagline">South India · Distance · Fare · Route</div>
+  </div>
+</header>
+
+<!-- Booking Card -->
+<div class="card">
+  <div class="input-group">
+    <label>Pickup Point</label>
+    <div class="input-with-icon">
+      <span class="input-icon">🟢</span>
+      <input id="pickup-input" type="text" placeholder="Enter pickup location" autocomplete="off" />
+      <span class="clear-btn" onclick="clearInput('pickup')">×</span>
+    </div>
+    <div class="suggestions" id="pickup-suggestions"></div>
+  </div>
+
+  <div class="swap-row">
+    <button class="swap-btn" onclick="swapLocations()">⇅</button>
+  </div>
+
+  <div class="input-group">
+    <label>Drop Point</label>
+    <div class="input-with-icon">
+      <span class="input-icon">🔴</span>
+      <input id="drop-input" type="text" placeholder="Enter destination" autocomplete="off" />
+      <span class="clear-btn" onclick="clearInput('drop')">×</span>
+    </div>
+    <div class="suggestions" id="drop-suggestions"></div>
+  </div>
+
+  <div class="section-title">Select Vehicle</div>
+  <div class="vehicle-row" id="vehicle-row"></div>
+
+  <div class="error-msg" id="error-msg"></div>
+  <div class="spinner-wrap" id="spinner">
+    <div class="spinner"></div> Calculating route…
+  </div>
+  <button class="calc-btn" id="calc-btn" onclick="calculateRoute()">Calculate Route &amp; Fare →</button>
+</div>
+
+<!-- Map -->
+<div id="map"></div>
+
+<!-- Results -->
+<div class="card results-card" id="results-card">
+  <div class="section-title">Trip Summary</div>
+  <div class="results-grid">
+    <div class="stat-box">
+      <div class="stat-val" id="res-distance">—</div>
+      <div class="stat-lbl">Distance</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" id="res-duration">—</div>
+      <div class="stat-lbl">Est. Time</div>
+    </div>
+    <div class="fare-box">
+      <div>
+        <div class="fare-label">Estimated Fare</div>
+        <div class="fare-amount" id="res-fare">—</div>
+        <div class="fare-vehicle" id="res-vehicle-name">—</div>
+      </div>
+      <div style="font-size:36px" id="res-vehicle-icon">🚗</div>
+    </div>
+  </div>
+
+  <div class="toll-row no-toll" id="toll-row">
+    <span id="toll-icon">✅</span>
+    <span id="toll-text">No toll roads detected on this route</span>
+  </div>
+  <div class="toll-notice">
+    <span>⚠️</span>
+    <span><strong>Toll fees, if any, must be paid by the customer</strong> and are not included in the above fare estimate.</span>
+  </div>
+
+  <div class="book-btns">
+    <button class="book-wa-btn" onclick="shareRouteWhatsApp()">
+      💬 Book via WhatsApp
+    </button>
+    <a class="book-call-btn" id="result-call-btn" href="#">
+      📞 Book via Call
+    </a>
+  </div>
+</div>
+
+<!-- Contact -->
+<div class="card" id="contact-section">
+  <div class="section-title">📞 Book or Enquire</div>
+  <div class="phone-row">
+    📱 Call us: <a id="phone-link" href="tel:+919999999999">+91 99999 99999</a>
+  </div>
+  <a id="wa-btn" href="#" class="whatsapp-btn" target="_blank" rel="noopener">
+    💬 Chat on WhatsApp
+  </a>
+  <div class="section-title">Send Booking Request</div>
+
+  <!-- Form (hidden after submit until user edits) -->
+  <div id="booking-form-wrap">
+    <form class="contact-form" id="booking-form" onsubmit="sendBookingWhatsApp(event)">
+      <input type="text" id="f-name" placeholder="Your Full Name" required />
+      <input type="tel" id="f-phone" placeholder="Mobile Number" required />
+      <div class="input-group" style="margin-bottom:10px">
+        <div class="input-with-icon">
+          <span class="input-icon">📍</span>
+          <input type="text" id="f-from" placeholder="From (City / Area)" autocomplete="off" required />
+          <span class="clear-btn" onclick="document.getElementById('f-from').value='';document.getElementById('f-from-sug').innerHTML='';formPickupCoord=null">×</span>
+        </div>
+        <div class="suggestions" id="f-from-sug"></div>
+      </div>
+      <div class="input-group" style="margin-bottom:10px">
+        <div class="input-with-icon">
+          <span class="input-icon">📌</span>
+          <input type="text" id="f-to" placeholder="To (City / Area)" autocomplete="off" required />
+          <span class="clear-btn" onclick="document.getElementById('f-to').value='';document.getElementById('f-to-sug').innerHTML='';formDropCoord=null">×</span>
+        </div>
+        <div class="suggestions" id="f-to-sug"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <input type="date" id="f-date" required style="margin-bottom:0" />
+        <input type="time" id="f-time" required style="margin-bottom:0" />
+      </div>
+      <select id="f-vehicle" style="margin-bottom:10px"></select>
+      <textarea id="f-note" placeholder="Any notes or requirements (optional)" style="margin-bottom:10px"></textarea>
+      <button type="submit" class="submit-btn">Preview &amp; Confirm Request →</button>
+    </form>
+  </div>
+
+  <!-- Confirmation panel (shown after form submit) -->
+  <div id="booking-confirm" style="display:none">
+    <div id="confirm-details"></div>
+    <div class="confirm-fare-box">
+      <div class="cfl">💰 Estimated Fare</div>
+      <div class="cfa" id="confirm-fare-amount">—</div>
+      <div class="cfs" id="confirm-fare-sub"></div>
+      <div class="cfn">⚠️ Toll fees (if any) to be paid by customer &nbsp;·&nbsp; Fare is an estimate</div>
+    </div>
+    <button class="submit-btn" style="background:var(--wa);box-shadow:0 4px 16px rgba(37,211,102,0.35);border:none" onclick="doSendWhatsApp()">
+      ✅ Confirm &amp; Send to WhatsApp
+    </button>
+    <button class="edit-back-btn" onclick="editBooking()">← Edit Details</button>
+    <div class="call-note">
+      <span style="flex-shrink:0">📞</span>
+      <span>If no call within <strong>3 minutes</strong>, please don't hesitate to call us directly — we're always ready to help!</span>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">
+  Powered by OpenStreetMap · OSRM · Nominatim · All free &amp; open source<br/>
+  Fare is an estimate. Actual fare may vary.
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="nav-handle" id="nav-handle" onclick="toggleNav()">
+    <span>▼</span> Hide Nav
+  </div>
+  <button class="nav-item" onclick="navHome()">
+    <span class="n-icon">🏠</span>Home
+  </button>
+  <button class="nav-item" id="nav-cars" onclick="toggleSheet('cars-sheet','nav-cars')">
+    <span class="n-icon">🚗</span>Cars
+  </button>
+  <button class="nav-item" onclick="navContact()">
+    <span class="n-icon">📞</span>Contact
+  </button>
+  <button class="nav-item" id="nav-more" onclick="toggleSheet('more-sheet','nav-more')">
+    <span class="n-icon">⋯</span>More
+  </button>
+</nav>
+
+<!-- Cars Sheet -->
+<div class="sheet" id="cars-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Our Vehicles &amp; Rates</div>
+  <div class="car-cards" id="cars-sheet-cards"></div>
+</div>
+
+<!-- More Sheet -->
+<div class="sheet" id="more-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">More</div>
+  <ul class="more-list">
+    <li><a href="admin.html">
+      <span class="ml-icon">⚙️</span>
+      <div><div class="ml-text">Admin Panel</div><div class="ml-sub">Manage vehicles &amp; pricing</div></div>
+    </a></li>
+    <li><a href="#" onclick="navContact();closeAllSheets();return false;">
+      <span class="ml-icon">📞</span>
+      <div><div class="ml-text">Contact Us</div><div class="ml-sub">Book via WhatsApp or form</div></div>
+    </a></li>
+    <li><a href="#">
+      <span class="ml-icon">ℹ️</span>
+      <div><div class="ml-text">About</div><div class="ml-sub">Ahamed Cabs · South India</div></div>
+    </a></li>
+  </ul>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeAllSheets()"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ── CONFIG (admin can update via admin panel) ──────────────
+  const DEFAULT_VEHICLES = [
+    { id:'sedan4',  name:'4 Seater Sedan', desc:'Swift Dzire / Etios',  seats:4,  icon:'🚗', base:50,  perKm:14, visible:true },
+    { id:'suv6',    name:'6 Seater SUV',   desc:'Ertiga / Marazzo',     seats:6,  icon:'🚙', base:70,  perKm:18, visible:true },
+    { id:'muv7',    name:'7 Seater MUV',   desc:'Innova / Crysta',      seats:7,  icon:'🚐', base:90,  perKm:22, visible:true },
+    { id:'tempo12', name:'12 Seater',      desc:'Tempo Traveller',      seats:12, icon:'🚌', base:150, perKm:28, visible:true },
+  ];
+
+  function getVehicles() {
+    try {
+      const s = localStorage.getItem('ahcabs_vehicles');
+      if (s) return JSON.parse(s).filter(v => v.visible);
+    } catch(e) {}
+    return DEFAULT_VEHICLES.filter(v => v.visible);
+  }
+
+  function getSettings() {
+    try {
+      const s = localStorage.getItem('ahcabs_settings');
+      if (s) return JSON.parse(s);
+    } catch(e) {}
+    return { phone: '919999999999', whatsapp: '919999999999' };
+  }
+
+  let vehicles = getVehicles();
+  let selectedVehicle = vehicles[0]?.id || 'sedan4';
+  let WHATSAPP_NUMBER = '919999999999';
+
+  // ── INIT ───────────────────────────────────────────────────
+  function init() {
+    vehicles = getVehicles();
+    selectedVehicle = vehicles[0]?.id || 'sedan4';
+
+    const cfg = getSettings();
+    WHATSAPP_NUMBER = cfg.whatsapp || '919999999999';
+    const phone = cfg.phone || '919999999999';
+
+    document.getElementById('phone-link').href = `tel:+${phone}`;
+    document.getElementById('phone-link').textContent = `+${phone.replace(/(\d{2})(\d{5})(\d{5})/, '$1 $2 $3')}`;
+    document.getElementById('result-call-btn').href = `tel:+${phone}`;
+    document.getElementById('wa-btn').href =
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello Ahamed Cabs! I\'d like to book a cab.')}`;
+
+    renderVehicleButtons();
+  }
+
+  function renderVehicleButtons() {
+    const row = document.getElementById('vehicle-row');
+    row.innerHTML = '';
+    vehicles.forEach((v, i) => {
+      const d = document.createElement('div');
+      d.className = 'veh-btn' + (i === 0 ? ' active' : '');
+      d.dataset.id = v.id;
+      d.innerHTML = `<div class="veh-icon">${v.icon}</div><div class="veh-name">${v.name}</div><div class="veh-rate">₹${v.perKm}/km</div>`;
+      d.onclick = () => {
+        document.querySelectorAll('.veh-btn').forEach(b => b.classList.remove('active'));
+        d.classList.add('active');
+        selectedVehicle = v.id;
+      };
+      row.appendChild(d);
+    });
+
+    const sel = document.getElementById('f-vehicle');
+    sel.innerHTML = vehicles.map(v =>
+      `<option value="${v.name} (${v.desc})">${v.icon} ${v.name} — ${v.desc} · ₹${v.base}+₹${v.perKm}/km</option>`
+    ).join('');
+  }
+
+  // ── SWAP / CLEAR ───────────────────────────────────────────
+  function swapLocations() {
+    const pi = document.getElementById('pickup-input');
+    const di = document.getElementById('drop-input');
+    [pi.value, di.value] = [di.value, pi.value];
+    [pickupCoord, dropCoord] = [dropCoord, pickupCoord];
+  }
+  function clearInput(w) {
+    document.getElementById(w+'-input').value = '';
+    document.getElementById(w+'-suggestions').innerHTML = '';
+    if (w === 'pickup') pickupCoord = null; else dropCoord = null;
+  }
+
+  // ── AUTOCOMPLETE — Photon API (Tamil Nadu & Kerala only) ────
+  // Photon by Komoot: 100% free, no key, excellent village coverage
+  const ALLOWED_STATES = ['Tamil Nadu', 'Kerala'];
+  // Bounding box covering Tamil Nadu + Kerala: minLon,minLat,maxLon,maxLat
+  const TK_BBOX = '74.8,8.0,80.5,13.6';
+  let debounce = {};
+  let pickupCoord = null, dropCoord = null;
+  let formPickupCoord = null, formDropCoord = null;
+
+  function isTNKL(feature) {
+    const state = (feature.properties?.state || '');
+    return ALLOWED_STATES.some(s => state.toLowerCase().includes(s.toLowerCase()));
+  }
+
+  // Build a clean display label from Photon feature properties
+  function photonLabel(props) {
+    const name  = props.name  || props.hamlet  || props.village || props.town || props.city || '';
+    const city  = props.city  || props.town    || props.village || '';
+    const dist  = props.county || props.district || '';
+    const state = props.state || '';
+    const main  = (name && city && name !== city) ? `${name}, ${city}` : (name || city);
+    const sub   = [dist, state].filter(Boolean).join(', ');
+    const full  = [name || city, dist, state].filter(Boolean).join(', ');
+    return { main, sub, full };
+  }
+
+  function setupAC(inputId, sugId, setter) {
+    const inp = document.getElementById(inputId);
+    const sug = document.getElementById(sugId);
+    inp.addEventListener('input', () => {
+      clearTimeout(debounce[inputId]);
+      const q = inp.value.trim();
+      if (q.length < 2) { sug.innerHTML = ''; return; }
+      debounce[inputId] = setTimeout(() => fetchSug(q, sug, inp, setter), 350);
+    });
+    inp.addEventListener('blur', () => setTimeout(() => { sug.innerHTML = ''; }, 220));
+  }
+
+  async function fetchSug(query, sugEl, inputEl, setter) {
+    sugEl.innerHTML = `<div style="padding:10px 14px"><div class="sug-sub" style="display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"></span>Searching…</div></div>`;
+    try {
+      // Pass 1: bbox-restricted for fastest, most relevant results
+      const d1 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15&bbox=${TK_BBOX}`)).json();
+      if (inputEl.value.trim() !== query) return;
+      let results = (d1.features || []).filter(isTNKL);
+
+      // Pass 2: no bbox (catches places slightly outside or alternate spellings)
+      if (!results.length) {
+        const d2 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15`)).json();
+        if (inputEl.value.trim() !== query) return;
+        results = (d2.features || []).filter(isTNKL);
+      }
+
+      sugEl.innerHTML = '';
+      if (!results.length) {
+        sugEl.innerHTML = '<div><div class="sug-sub" style="color:#f59e0b;padding:2px 0">⚠️ Not found in Tamil Nadu / Kerala. Try a different spelling or nearby town.</div></div>';
+        return;
+      }
+      results.slice(0, 7).forEach(f => {
+        const { main, sub, full } = photonLabel(f.properties);
+        const [lon, lat] = f.geometry.coordinates;
+        const d = document.createElement('div');
+        d.innerHTML = `<div class="sug-main">${main}</div><div class="sug-sub">${sub}</div>`;
+        d.addEventListener('mousedown', () => {
+          inputEl.value = full;
+          setter({ lat, lon });
+          sugEl.innerHTML = '';
+        });
+        sugEl.appendChild(d);
+      });
+    } catch(e) {
+      if (inputEl.value.trim() === query) sugEl.innerHTML = '';
+    }
+  }
+
+  async function geocode(q) {
+    try {
+      const d1 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10&bbox=${TK_BBOX}`)).json();
+      let hit = (d1.features || []).find(isTNKL);
+      if (!hit) {
+        const d2 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10`)).json();
+        hit = (d2.features || []).find(isTNKL);
+      }
+      if (!hit) return null;
+      const [lon, lat] = hit.geometry.coordinates;
+      return { lat, lon };
+    } catch { return null; }
+  }
+
+  setupAC('pickup-input', 'pickup-suggestions', c => pickupCoord = c);
+  setupAC('drop-input',   'drop-suggestions',   c => dropCoord   = c);
+  setupAC('f-from', 'f-from-sug', c => formPickupCoord = c);
+  setupAC('f-to',   'f-to-sug',   c => formDropCoord  = c);
+
+  // ── MAP ────────────────────────────────────────────────────
+  let map = null, routeLayer = null, pickupMarker = null, dropMarker = null;
+
+  function initMap() {
+    if (map) return;
+    document.getElementById('map').style.display = 'block';
+    map = L.map('map').setView([11.5, 78.5], 7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd', maxZoom: 19,
+    }).addTo(map);
+  }
+
+  function makeIcon(emoji, color) {
+    return L.divIcon({
+      html: `<div style="background:${color};width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.25)"><span style="transform:rotate(45deg);font-size:15px">${emoji}</span></div>`,
+      iconSize:[32,32], iconAnchor:[16,32], className:'',
+    });
+  }
+
+  // ── ROUTE CALCULATION ──────────────────────────────────────
+  function showError(m) { const e = document.getElementById('error-msg'); e.textContent = m; e.style.display = 'block'; }
+  function hideError()  { document.getElementById('error-msg').style.display = 'none'; }
+
+  function hasTolls(steps) {
+    return steps.some(s => ['toll','plaza','naka','expressway'].some(k => (s.name||'').toLowerCase().includes(k)));
+  }
+
+  async function geocode(q) {
+    try {
+      const h = { 'Accept-Language': 'en' };
+      // Pass 1: India-only, viewbox preference
+      const d1 = await (await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=15&addressdetails=1&countrycodes=in&viewbox=${SI_VIEWBOX}`, { headers: h })).json();
+      let hit = d1.find(i => isSI(i));
+      // Pass 2: global search filtered by state
+      if (!hit) {
+        const d2 = await (await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=15&addressdetails=1`, { headers: h })).json();
+        hit = d2.find(i => isSI(i));
+      }
+      if (!hit) return null;
+      return { lat: parseFloat(hit.lat), lon: parseFloat(hit.lon) };
+    } catch { return null; }
+  }
+
+  async function calculateRoute() {
+    hideError();
+    if (!pickupCoord) {
+      const q = document.getElementById('pickup-input').value.trim();
+      if (!q) { showError('Please enter a pickup location.'); return; }
+      pickupCoord = await geocode(q);
+      if (!pickupCoord) { showError('Pickup not found in Tamil Nadu / Kerala. Please be more specific.'); return; }
+    }
+    if (!dropCoord) {
+      const q = document.getElementById('drop-input').value.trim();
+      if (!q) { showError('Please enter a drop destination.'); return; }
+      dropCoord = await geocode(q);
+      if (!dropCoord) { showError('Drop location not found in Tamil Nadu / Kerala.'); return; }
+    }
+
+    document.getElementById('spinner').style.display = 'flex';
+    document.getElementById('calc-btn').disabled = true;
+    document.getElementById('results-card').style.display = 'none';
+
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${pickupCoord.lon},${pickupCoord.lat};${dropCoord.lon},${dropCoord.lat}?overview=full&geometries=geojson&steps=true`;
+      const data = await (await fetch(url)).json();
+      if (data.code !== 'Ok' || !data.routes.length) throw new Error('No route found between these locations.');
+
+      const route = data.routes[0];
+      const distKm = route.distance / 1000;
+      const durMin = Math.round(route.duration / 60);
+      const v = vehicles.find(x => x.id === selectedVehicle) || vehicles[0];
+      const driverFee = parseInt(getSettings().driverFee || 0);
+      const kmCharge  = Math.round(distKm * v.perKm);
+      const fare      = v.base + kmCharge + driverFee;
+      const allSteps  = route.legs.flatMap(l => l.steps);
+      const tollDetected = hasTolls(allSteps);
+
+      initMap();
+      if (pickupMarker) map.removeLayer(pickupMarker);
+      if (dropMarker)   map.removeLayer(dropMarker);
+      if (routeLayer)   map.removeLayer(routeLayer);
+
+      pickupMarker = L.marker([pickupCoord.lat, pickupCoord.lon], { icon: makeIcon('🟢','#16a34a') }).addTo(map).bindPopup('Pickup');
+      dropMarker   = L.marker([dropCoord.lat,   dropCoord.lon],   { icon: makeIcon('🔴','#dc2626') }).addTo(map).bindPopup('Drop');
+      routeLayer   = L.geoJSON(route.geometry, { style:{ color:'#6C63FF', weight:5, opacity:0.85 } }).addTo(map);
+      map.fitBounds(routeLayer.getBounds(), { padding:[30,30] });
+
+      document.getElementById('res-distance').textContent = distKm >= 1 ? distKm.toFixed(1)+' km' : Math.round(route.distance)+' m';
+      document.getElementById('res-duration').textContent = durMin >= 60 ? Math.floor(durMin/60)+'h '+(durMin%60)+'m' : durMin+' min';
+      document.getElementById('res-fare').textContent     = '₹'+fare.toLocaleString('en-IN');
+      const breakdown = `₹${v.base} base + ₹${kmCharge} km${driverFee > 0 ? ' + ₹'+driverFee+' driver' : ''}`;
+      document.getElementById('res-vehicle-name').textContent = v.name + ' · ' + breakdown;
+      document.getElementById('res-vehicle-icon').textContent = v.icon;
+
+      const tr = document.getElementById('toll-row');
+      if (tollDetected) {
+        tr.className = 'toll-row has-toll';
+        document.getElementById('toll-icon').textContent = '🚧';
+        document.getElementById('toll-text').textContent = 'Toll road(s) may be present — fees paid by customer';
+      } else {
+        tr.className = 'toll-row no-toll';
+        document.getElementById('toll-icon').textContent = '✅';
+        document.getElementById('toll-text').textContent = 'No toll roads detected on this route';
+      }
+
+      document.getElementById('results-card').style.display = 'block';
+      document.getElementById('results-card').scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+    } catch(err) {
+      showError(err.message || 'Failed to calculate route. Please try again.');
+    } finally {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('calc-btn').disabled = false;
+    }
+  }
+
+  // ── BOOKING FORM FLOW ──────────────────────────────────────
+  let bookingData = null;
+
+  async function sendBookingWhatsApp(e) {
+    e.preventDefault();
+    const name    = document.getElementById('f-name').value.trim();
+    const phone   = document.getElementById('f-phone').value.trim();
+    const from    = document.getElementById('f-from').value.trim();
+    const to      = document.getElementById('f-to').value.trim();
+    const date    = document.getElementById('f-date').value;
+    const time    = document.getElementById('f-time').value;
+    const vehVal  = document.getElementById('f-vehicle').value;
+    const note    = document.getElementById('f-note').value.trim();
+    const vehObj  = vehicles.find(v => vehVal.includes(v.name)) || vehicles[0];
+
+    // Format date+time nicely
+    let dateLabel = date;
+    try {
+      dateLabel = new Date(date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    } catch(e) {}
+    const dtLabel = time ? `${dateLabel} at ${time}` : dateLabel;
+
+    bookingData = { name, phone, from, to, date, time, dtLabel, vehVal, vehObj, note };
+
+    // Switch to confirmation panel
+    document.getElementById('booking-form-wrap').style.display = 'none';
+    const confirm = document.getElementById('booking-confirm');
+    confirm.style.display = 'block';
+    confirm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Fill trip detail rows
+    const rows = [
+      ['👤 Name',        name],
+      ['📱 Phone',       phone],
+      ['📍 From',        from],
+      ['📌 To',          to],
+      ['📅 Date & Time', dtLabel],
+      ['🚗 Vehicle',     vehVal],
+    ];
+    if (note) rows.push(['📝 Note', note]);
+    document.getElementById('confirm-details').innerHTML =
+      rows.map(([l, v]) => `<div class="confirm-row"><span class="cr-label">${l}</span><span class="cr-val">${v}</span></div>`).join('');
+
+    // Calculate fare estimate
+    const fareAmountEl = document.getElementById('confirm-fare-amount');
+    const fareSubEl    = document.getElementById('confirm-fare-sub');
+    fareAmountEl.innerHTML = `<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span> Calculating…`;
+    fareSubEl.textContent = '';
+
+    if (formPickupCoord && formDropCoord && vehObj) {
+      try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${formPickupCoord.lon},${formPickupCoord.lat};${formDropCoord.lon},${formDropCoord.lat}?overview=false`;
+        const resp = await (await fetch(url)).json();
+        if (resp.code === 'Ok' && resp.routes.length) {
+          const distKm    = resp.routes[0].distance / 1000;
+          const driverFee = parseInt(getSettings().driverFee || 0);
+          const kmCharge  = Math.round(distKm * vehObj.perKm);
+          const fare      = vehObj.base + kmCharge + driverFee;
+          fareAmountEl.textContent = '₹' + fare.toLocaleString('en-IN');
+          fareSubEl.textContent    = `₹${vehObj.base} base + ₹${kmCharge} km${driverFee > 0 ? ' + ₹'+driverFee+' driver' : ''} · ${distKm.toFixed(1)} km`;
+          bookingData.fareText      = '₹' + fare.toLocaleString('en-IN');
+          bookingData.fareBreakdown = fareSubEl.textContent;
+        } else {
+          fareAmountEl.textContent = 'Route unavailable';
+        }
+      } catch {
+        fareAmountEl.textContent = 'Unable to calculate';
+      }
+    } else {
+      fareAmountEl.textContent = 'Select places from dropdown for fare';
+      fareSubEl.textContent    = '';
+    }
+  }
+
+  function doSendWhatsApp() {
+    if (!bookingData) return;
+    const { name, phone, from, to, dtLabel, vehVal, note, fareText, fareBreakdown } = bookingData;
+    const msg =
+`🚖 *Ahamed Cabs – Booking Request*
+
+👤 Name: ${name}
+📱 Phone: ${phone}
+📍 From: ${from}
+📌 To: ${to}
+📅 Date & Time: ${dtLabel}
+🚗 Vehicle: ${vehVal}${fareText ? '\n💰 Est. Fare: '+fareText+(fareBreakdown ? ' ('+fareBreakdown+')' : '') : ''}${note ? '\n📝 Note: '+note : ''}
+
+⚠️ Toll fees (if any) to be paid by customer
+
+_Please confirm the booking._`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  function editBooking() {
+    document.getElementById('booking-form-wrap').style.display = 'block';
+    document.getElementById('booking-confirm').style.display  = 'none';
+  }
+
+  // ── SHARE ROUTE TO WHATSAPP ────────────────────────────────
+  function shareRouteWhatsApp() {
+    if (!pickupCoord || !dropCoord) return;
+    const pickup   = document.getElementById('pickup-input').value;
+    const drop     = document.getElementById('drop-input').value;
+    const dist     = document.getElementById('res-distance').textContent;
+    const dur      = document.getElementById('res-duration').textContent;
+    const fare     = document.getElementById('res-fare').textContent;
+    const veh      = document.getElementById('res-vehicle-name').textContent;
+    const tollTxt  = document.getElementById('toll-text').textContent;
+    const mapsUrl  = `https://www.google.com/maps/dir/${pickupCoord.lat},${pickupCoord.lon}/${dropCoord.lat},${dropCoord.lon}`;
+    const fareBreakdown = document.getElementById('res-vehicle-name').textContent;
+    const msg =
+`🚖 *Ahamed Cabs – Trip Details*
+
+📍 *From:* ${pickup}
+🏁 *To:* ${drop}
+
+📏 *Distance:* ${dist}
+⏱️ *Est. Time:* ${dur}
+🚗 *Vehicle:* ${veh.split(' · ')[0]}
+💰 *Est. Fare:* ${fare}
+   _(${fareBreakdown.split(' · ').slice(1).join(' · ')})_
+
+🛣️ ${tollTxt}
+⚠️ *Toll fees (if any) to be paid by customer*
+
+🗺️ *View Route on Map:*
+${mapsUrl}
+
+_Fare is an estimate. Actual fare may vary._
+_To confirm booking, please reply with your name & phone number._`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  // ── NAV HIDE TOGGLE ────────────────────────────────────────
+  let navHidden = false;
+  function toggleNav() {
+    navHidden = !navHidden;
+    document.getElementById('bottom-nav').classList.toggle('nav-hidden', navHidden);
+    document.getElementById('nav-handle').innerHTML =
+      `<span>${navHidden ? '▲' : '▼'}</span> ${navHidden ? 'Show Nav' : 'Hide Nav'}`;
+    document.body.style.paddingBottom = navHidden ? '30px' : 'calc(var(--nav-h) + 16px)';
+    if (navHidden) closeAllSheets();
+  }
+
+  // ── BOTTOM NAV ─────────────────────────────────────────────
+  let activeSheet = null;
+
+  function toggleSheet(sheetId, btnId) {
+    const sheet = document.getElementById(sheetId);
+    const overlay = document.getElementById('overlay');
+    if (sheetId === 'cars-sheet') renderCarsSheet();
+
+    if (activeSheet === sheetId) {
+      sheet.classList.remove('open');
+      overlay.classList.remove('show');
+      document.getElementById(btnId).classList.remove('active');
+      activeSheet = null;
+    } else {
+      if (activeSheet) {
+        document.getElementById(activeSheet).classList.remove('open');
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      }
+      sheet.classList.add('open');
+      overlay.classList.add('show');
+      document.getElementById(btnId).classList.add('active');
+      activeSheet = sheetId;
+    }
+  }
+
+  function closeAllSheets() {
+    document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
+    document.getElementById('overlay').classList.remove('show');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    activeSheet = null;
+  }
+
+  function navHome()    { closeAllSheets(); window.scrollTo({ top:0, behavior:'smooth' }); }
+  function navContact() { closeAllSheets(); document.getElementById('contact-section').scrollIntoView({ behavior:'smooth' }); }
+
+  function renderCarsSheet() {
+    const c = document.getElementById('cars-sheet-cards');
+    c.innerHTML = '';
+    const vs = getVehicles();
+    if (!vs.length) { c.innerHTML = '<p style="color:var(--muted);font-size:14px">No vehicles available.</p>'; return; }
+    vs.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'car-card';
+      card.innerHTML = `<div class="cc-icon">${v.icon}</div><div class="cc-name">${v.name}</div><div class="cc-desc">${v.desc}</div><div class="cc-price">₹${v.base} base · ₹${v.perKm}/km</div>`;
+      c.appendChild(card);
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Ahamed Cabs – Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6C63FF;
+      --surface: #ffffff;
+      --bg: #f4f4fb;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(108,99,255,0.10);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Login Screen ── */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #6C63FF 0%, #9c96ff 100%);
+    }
+    .login-card { background: #fff; border-radius: 20px; padding: 32px 24px; width: 100%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .login-logo { font-size: 32px; text-align: center; }
+    .login-title { font-size: 22px; font-weight: 800; text-align: center; margin-top: 8px; }
+    .login-sub { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 24px; }
+    .login-card input {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 13px 14px; font-size: 15px; outline: none; margin-bottom: 12px; font-family: inherit; transition: border-color 0.2s;
+    }
+    .login-card input:focus { border-color: var(--primary); }
+    .login-btn {
+      width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(108,99,255,0.35);
+    }
+    .login-error { color: var(--danger); font-size: 13px; margin-bottom: 10px; min-height: 18px; text-align: center; }
+
+    /* ── Dashboard ── */
+    #dashboard { display: none; }
+    header {
+      background: var(--primary); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(108,99,255,0.3);
+    }
+    .hdr-title { font-size: 17px; font-weight: 700; }
+    .hdr-sub { font-size: 11px; opacity: 0.75; margin-top: 1px; }
+    .logout-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+    /* Cards */
+    .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px; margin: 16px 14px; }
+    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+    /* Form fields */
+    .field { margin-bottom: 12px; }
+    .field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); display: block; margin-bottom: 5px; }
+    .field input, .field select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 12px; font-size: 14px; color: var(--text); background: #fafafa; outline: none; font-family: inherit; transition: border-color 0.2s; }
+    .field input:focus, .field select:focus { border-color: var(--primary); background: #fff; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .add-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(108,99,255,0.3); }
+    .save-btn { width: 100%; background: var(--success); color: #fff; border: none; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3); margin-top: 10px; }
+    .save-msg { text-align: center; font-size: 13px; color: var(--success); margin-top: 8px; height: 18px; }
+
+    /* Vehicle list */
+    .veh-item {
+      border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 12px; margin-bottom: 10px; background: #fafafa;
+    }
+    .veh-item.hidden-veh { opacity: 0.5; }
+    .veh-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .veh-info { display: flex; align-items: center; gap: 10px; }
+    .veh-icon-big { font-size: 28px; }
+    .veh-name-big { font-size: 14px; font-weight: 700; }
+    .veh-desc-sm { font-size: 12px; color: var(--muted); }
+    .veh-price-sm { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 2px; }
+    .veh-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-sm { border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .btn-toggle { background: #f0fdf4; color: var(--success); }
+    .btn-toggle.off { background: #fef2f2; color: var(--danger); }
+    .btn-edit { background: #f0eeff; color: var(--primary); }
+    .btn-del { background: #fef2f2; color: var(--danger); }
+
+    /* Inline edit form */
+    .edit-form { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: none; }
+    .edit-form.open { display: block; }
+    .edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .edit-row input, .edit-row select { border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 13px; width: 100%; outline: none; font-family: inherit; }
+    .edit-row input:focus, .edit-row select:focus { border-color: var(--primary); }
+    .btn-update { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-cancel { background: #f3f4f6; color: var(--muted); border: none; border-radius: 8px; padding: 9px 14px; font-size: 13px; cursor: pointer; }
+
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .toggle-label { font-size: 13px; color: var(--text); font-weight: 500; }
+    .toggle { position: relative; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: #d1d5db; border-radius: 24px; transition: 0.3s; cursor: pointer; }
+    .toggle-slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.3s; }
+    .toggle input:checked + .toggle-slider { background: var(--success); }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+    /* Settings section */
+    .settings-row { display: flex; gap: 8px; align-items: flex-end; }
+    .settings-row .field { flex: 1; margin-bottom: 0; }
+    .settings-row button { flex-shrink: 0; background: var(--primary); color:#fff; border:none; border-radius:10px; padding:11px 16px; font-size:14px; font-weight:700; cursor:pointer; }
+
+    /* Back link */
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--primary); font-size: 14px; font-weight: 600; text-decoration: none; margin: 16px 14px 0; }
+
+    /* Empty state */
+    .empty-state { text-align: center; color: var(--muted); padding: 20px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">⚙️</div>
+    <div class="login-title">Admin Panel</div>
+    <div class="login-sub">Ahamed Cabs · Vehicle Manager</div>
+    <div class="login-error" id="login-error"></div>
+    <form onsubmit="doLogin(event)">
+      <input type="text" id="admin-user" placeholder="Username" autocomplete="off" required />
+      <input type="password" id="admin-pass" placeholder="Password" required />
+      <button type="submit" class="login-btn">Login →</button>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+  <header>
+    <div>
+      <div class="hdr-title">⚙️ Admin Panel</div>
+      <div class="hdr-sub">Ahamed Cabs</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </header>
+
+  <a class="back-link" href="index.html">← Back to main site</a>
+
+  <!-- Contact Settings -->
+  <div class="card">
+    <div class="card-title">📱 Contact Settings</div>
+    <div class="field">
+      <label>📞 Call Number — used for "Book via Call" button (with country code, no +)</label>
+      <input type="tel" id="cfg-phone" placeholder="919876543210" />
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">e.g. 919876543210 for +91 98765 43210</div>
+    </div>
+    <div class="field">
+      <label>WhatsApp Number (with country code, no +)</label>
+      <input type="tel" id="cfg-whatsapp" placeholder="919876543210" />
+    </div>
+    <div class="field">
+      <label>Driver Fee (₹) — Fixed amount added to every trip fare</label>
+      <input type="number" id="cfg-driver" placeholder="e.g. 300" min="0" />
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">This fee is shown separately in the fare breakdown (e.g. ₹50 base + ₹420 km + ₹300 driver)</div>
+    </div>
+    <button class="save-btn" onclick="saveSettings()">💾 Save Settings</button>
+    <div class="save-msg" id="settings-msg"></div>
+  </div>
+
+  <!-- Add Vehicle -->
+  <div class="card">
+    <div class="card-title">➕ Add New Vehicle</div>
+    <div class="field">
+      <label>Vehicle Name</label>
+      <input type="text" id="nv-name" placeholder="e.g. 4 Seater Sedan" />
+    </div>
+    <div class="field">
+      <label>Description (car models)</label>
+      <input type="text" id="nv-desc" placeholder="e.g. Swift Dzire / Etios" />
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label>Icon</label>
+        <select id="nv-icon">
+          <option value="🚗">🚗 Sedan</option>
+          <option value="🚙">🚙 SUV</option>
+          <option value="🚐">🚐 MUV/Van</option>
+          <option value="🚌">🚌 Bus/Tempo</option>
+          <option value="🚕">🚕 Taxi</option>
+          <option value="🏎️">🏎️ Sports</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Seats</label>
+        <input type="number" id="nv-seats" placeholder="4" min="1" max="30" />
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="field">
+        <label>Base Fare (₹)</label>
+        <input type="number" id="nv-base" placeholder="50" min="0" />
+      </div>
+      <div class="field">
+        <label>Per KM Rate (₹)</label>
+        <input type="number" id="nv-perkm" placeholder="14" min="0" />
+      </div>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-label">Visible to customers</span>
+      <label class="toggle">
+        <input type="checkbox" id="nv-visible" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <button class="add-btn" onclick="addVehicle()">Add Vehicle</button>
+    <div class="save-msg" id="add-msg"></div>
+  </div>
+
+  <!-- Vehicle List -->
+  <div class="card">
+    <div class="card-title">🚗 Manage Vehicles</div>
+    <div id="vehicle-admin-list"></div>
+    <button class="save-btn" onclick="publishChanges()">✅ Save &amp; Publish All Changes</button>
+    <div class="save-msg" id="publish-msg"></div>
+  </div>
+</div>
+
+<script>
+  const ADMIN_USER = 'ahamedcabs';
+  const ADMIN_PASS = 'Admin@2024';
+  const LS_VEHICLES = 'ahcabs_vehicles';
+  const LS_SETTINGS = 'ahcabs_settings';
+
+  const DEFAULTS = [
+    { id:'sedan4',  name:'4 Seater Sedan', desc:'Swift Dzire / Etios',  seats:4,  icon:'🚗', base:50,  perKm:14, visible:true },
+    { id:'suv6',    name:'6 Seater SUV',   desc:'Ertiga / Marazzo',     seats:6,  icon:'🚙', base:70,  perKm:18, visible:true },
+    { id:'muv7',    name:'7 Seater MUV',   desc:'Innova / Crysta',      seats:7,  icon:'🚐', base:90,  perKm:22, visible:true },
+    { id:'tempo12', name:'12 Seater',      desc:'Tempo Traveller',      seats:12, icon:'🚌', base:150, perKm:28, visible:true },
+  ];
+
+  let vehicles = [];
+
+  function loadVehicles() {
+    try {
+      const s = localStorage.getItem(LS_VEHICLES);
+      if (s) { vehicles = JSON.parse(s); return; }
+    } catch(e) {}
+    vehicles = DEFAULTS.map(v => ({ ...v }));
+  }
+
+  function saveVehicles() {
+    localStorage.setItem(LS_VEHICLES, JSON.stringify(vehicles));
+  }
+
+  // ── Login ──────────────────────────────────────────────────
+  function doLogin(e) {
+    e.preventDefault();
+    const u = document.getElementById('admin-user').value.trim();
+    const p = document.getElementById('admin-pass').value;
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadVehicles();
+      loadSettingsUI();
+      renderVehicleList();
+    } else {
+      document.getElementById('login-error').textContent = '❌ Invalid credentials. Please try again.';
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('admin-user').value = '';
+    document.getElementById('admin-pass').value = '';
+  }
+
+  // ── Settings ───────────────────────────────────────────────
+  function loadSettingsUI() {
+    try {
+      const s = JSON.parse(localStorage.getItem(LS_SETTINGS) || '{}');
+      document.getElementById('cfg-phone').value    = s.phone     || '';
+      document.getElementById('cfg-whatsapp').value = s.whatsapp  || '';
+      document.getElementById('cfg-driver').value   = s.driverFee != null ? s.driverFee : '';
+    } catch(e) {}
+  }
+
+  function saveSettings() {
+    const phone     = document.getElementById('cfg-phone').value.trim();
+    const whatsapp  = document.getElementById('cfg-whatsapp').value.trim();
+    const driverFee = parseInt(document.getElementById('cfg-driver').value) || 0;
+    localStorage.setItem(LS_SETTINGS, JSON.stringify({ phone, whatsapp, driverFee }));
+    const msg = document.getElementById('settings-msg');
+    msg.textContent = '✅ Contact settings saved!';
+    setTimeout(() => { msg.textContent = ''; }, 3000);
+  }
+
+  // ── Vehicle List ───────────────────────────────────────────
+  function renderVehicleList() {
+    const container = document.getElementById('vehicle-admin-list');
+    if (!vehicles.length) {
+      container.innerHTML = '<div class="empty-state">No vehicles yet. Add one above.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    vehicles.forEach((v, i) => {
+      const item = document.createElement('div');
+      item.className = 'veh-item' + (v.visible ? '' : ' hidden-veh');
+      item.id = 'vi-' + v.id;
+      item.innerHTML = `
+        <div class="veh-top">
+          <div class="veh-info">
+            <div class="veh-icon-big">${v.icon}</div>
+            <div>
+              <div class="veh-name-big">${v.name}</div>
+              <div class="veh-desc-sm">${v.desc} · ${v.seats} seats</div>
+              <div class="veh-price-sm">₹${v.base} base + ₹${v.perKm}/km</div>
+            </div>
+          </div>
+          <div class="veh-actions">
+            <button class="btn-sm btn-toggle ${v.visible ? '' : 'off'}" onclick="toggleVisible(${i})">${v.visible ? '👁 Shown' : '🚫 Hidden'}</button>
+            <button class="btn-sm btn-edit" onclick="openEdit(${i})">✏️ Edit</button>
+            <button class="btn-sm btn-del"  onclick="deleteVehicle(${i})">🗑️</button>
+          </div>
+        </div>
+        <div class="edit-form" id="ef-${v.id}">
+          <div class="edit-row">
+            <input type="text"   id="ef-name-${v.id}"  value="${v.name}"  placeholder="Name" />
+            <input type="text"   id="ef-desc-${v.id}"  value="${v.desc}"  placeholder="Desc" />
+          </div>
+          <div class="edit-row">
+            <select id="ef-icon-${v.id}">
+              ${['🚗','🚙','🚐','🚌','🚕','🏎️'].map(ic => `<option value="${ic}" ${ic===v.icon?'selected':''}>${ic}</option>`).join('')}
+            </select>
+            <input type="number" id="ef-seats-${v.id}" value="${v.seats}" placeholder="Seats" min="1" />
+          </div>
+          <div class="edit-row">
+            <input type="number" id="ef-base-${v.id}"  value="${v.base}"  placeholder="Base ₹" min="0" />
+            <input type="number" id="ef-perkm-${v.id}" value="${v.perKm}" placeholder="Per km ₹" min="0" />
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn-update" onclick="updateVehicle(${i})">Save</button>
+            <button class="btn-cancel" onclick="closeEdit('${v.id}')">Cancel</button>
+          </div>
+        </div>`;
+      container.appendChild(item);
+    });
+  }
+
+  function openEdit(i) {
+    const id = vehicles[i].id;
+    document.querySelectorAll('.edit-form').forEach(f => f.classList.remove('open'));
+    document.getElementById('ef-'+id).classList.add('open');
+  }
+  function closeEdit(id) {
+    document.getElementById('ef-'+id).classList.remove('open');
+  }
+
+  function updateVehicle(i) {
+    const v = vehicles[i];
+    v.name  = document.getElementById('ef-name-'+v.id).value.trim()  || v.name;
+    v.desc  = document.getElementById('ef-desc-'+v.id).value.trim()  || v.desc;
+    v.icon  = document.getElementById('ef-icon-'+v.id).value         || v.icon;
+    v.seats = parseInt(document.getElementById('ef-seats-'+v.id).value) || v.seats;
+    v.base  = parseFloat(document.getElementById('ef-base-'+v.id).value)  || v.base;
+    v.perKm = parseFloat(document.getElementById('ef-perkm-'+v.id).value) || v.perKm;
+    renderVehicleList();
+  }
+
+  function toggleVisible(i) {
+    vehicles[i].visible = !vehicles[i].visible;
+    renderVehicleList();
+  }
+
+  function deleteVehicle(i) {
+    if (!confirm(`Delete "${vehicles[i].name}"?`)) return;
+    vehicles.splice(i, 1);
+    renderVehicleList();
+  }
+
+  function addVehicle() {
+    const name  = document.getElementById('nv-name').value.trim();
+    const desc  = document.getElementById('nv-desc').value.trim();
+    const icon  = document.getElementById('nv-icon').value;
+    const seats = parseInt(document.getElementById('nv-seats').value) || 4;
+    const base  = parseFloat(document.getElementById('nv-base').value) || 50;
+    const perKm = parseFloat(document.getElementById('nv-perkm').value) || 14;
+    const visible = document.getElementById('nv-visible').checked;
+
+    if (!name) { alert('Please enter a vehicle name.'); return; }
+
+    vehicles.push({
+      id: 'v_' + Date.now(),
+      name, desc, icon, seats, base, perKm, visible,
+    });
+
+    document.getElementById('nv-name').value  = '';
+    document.getElementById('nv-desc').value  = '';
+    document.getElementById('nv-seats').value = '';
+    document.getElementById('nv-base').value  = '';
+    document.getElementById('nv-perkm').value = '';
+    document.getElementById('nv-visible').checked = true;
+
+    renderVehicleList();
+    const msg = document.getElementById('add-msg');
+    msg.textContent = '✅ Vehicle added! Click "Save & Publish" to make it live.';
+    setTimeout(() => { msg.textContent = ''; }, 4000);
+  }
+
+  function publishChanges() {
+    saveVehicles();
+    const msg = document.getElementById('publish-msg');
+    msg.textContent = '✅ Changes saved and published to the main site!';
+    setTimeout(() => { msg.textContent = ''; }, 4000);
+  }
+</script>
+</body>
+</html>
