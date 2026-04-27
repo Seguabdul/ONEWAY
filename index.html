@@ -55,6 +55,10 @@
     .input-with-icon input { flex: 1; border: none; background: transparent; padding: 12px 10px 12px 0; font-size: 15px; color: var(--text); outline: none; width: 100%; }
     .input-with-icon input::placeholder { color: #b0b3be; }
     .clear-btn { width: 32px; text-align: center; cursor: pointer; color: #b0b3be; font-size: 18px; padding: 0 4px; }
+    .map-pick-btn { width: 32px; text-align: center; cursor: pointer; font-size: 15px; padding: 0 2px; flex-shrink: 0; color: var(--primary); opacity: 0.75; }
+    .map-pick-btn:hover { opacity: 1; }
+    #picker-map { height: 55vh; border-radius: 12px; overflow: hidden; margin-bottom: 10px; }
+    .picker-status { background: var(--bg); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--muted); margin-bottom: 10px; text-align: center; line-height: 1.5; }
 
     /* Suggestions */
     .suggestions { position: absolute; left: 0; right: 0; background: #fff; border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; z-index: 2000; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
@@ -76,6 +80,11 @@
     .veh-btn .veh-icon { font-size: 22px; }
     .veh-btn .veh-name { font-size: 11px; font-weight: 600; margin-top: 2px; }
     .veh-btn .veh-rate { font-size: 10px; color: var(--muted); }
+
+    /* Trip type toggle */
+    .trip-type-row { display: flex; margin-bottom: 14px; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .trip-type-btn { flex: 1; padding: 11px; font-size: 14px; font-weight: 600; border: none; background: #fafafa; color: var(--muted); cursor: pointer; font-family: inherit; transition: all 0.18s; }
+    .trip-type-btn.active { background: var(--primary); color: #fff; }
 
     /* Calc button */
     .calc-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(108,99,255,0.35); transition: transform 0.1s; }
@@ -240,6 +249,18 @@
     .overlay.show { opacity: 1; pointer-events: all; }
 
     .leaflet-routing-container { display: none !important; }
+
+    /* Booking modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:10001; display:none; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.show { display:flex; }
+    .modal-card { background:#fff; border-radius:20px; padding:24px 20px; width:100%; max-width:360px; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+    .modal-title { font-size:18px; font-weight:800; margin-bottom:4px; }
+    .modal-sub { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+    .modal-input { width:100%; border:1.5px solid var(--border); border-radius:10px; padding:12px; font-size:15px; color:var(--text); background:#fafafa; outline:none; margin-bottom:10px; font-family:inherit; transition:border-color 0.2s; }
+    .modal-input:focus { border-color:var(--primary); background:#fff; }
+    .modal-err { color:var(--danger); font-size:12px; margin-bottom:8px; min-height:16px; }
+    .modal-send-btn { width:100%; background:var(--wa); color:#fff; border:none; border-radius:12px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; margin-bottom:8px; box-shadow:0 4px 12px rgba(37,211,102,0.3); }
+    .modal-cancel-btn { width:100%; background:#f3f4f6; color:var(--muted); border:none; border-radius:12px; padding:12px; font-size:14px; cursor:pointer; font-family:inherit; }
   </style>
 </head>
 <body>
@@ -259,6 +280,7 @@
       <span class="input-icon">🟢</span>
       <input id="pickup-input" type="text" placeholder="Enter pickup location" autocomplete="off" />
       <span class="clear-btn" onclick="clearInput('pickup')">×</span>
+      <span class="map-pick-btn" onclick="openPicker('pickup')" title="Pick on map">📍</span>
     </div>
     <div class="suggestions" id="pickup-suggestions"></div>
   </div>
@@ -273,8 +295,14 @@
       <span class="input-icon">🔴</span>
       <input id="drop-input" type="text" placeholder="Enter destination" autocomplete="off" />
       <span class="clear-btn" onclick="clearInput('drop')">×</span>
+      <span class="map-pick-btn" onclick="openPicker('drop')" title="Pick on map">📍</span>
     </div>
     <div class="suggestions" id="drop-suggestions"></div>
+  </div>
+
+  <div class="trip-type-row">
+    <button type="button" class="trip-type-btn active" id="btn-oneway" onclick="setTripType('oneway')">One Way</button>
+    <button type="button" class="trip-type-btn" id="btn-roundtrip" onclick="setTripType('roundtrip')">Round Trip</button>
   </div>
 
   <div class="section-title">Select Vehicle</div>
@@ -347,11 +375,16 @@
     <form class="contact-form" id="booking-form" onsubmit="sendBookingWhatsApp(event)">
       <input type="text" id="f-name" placeholder="Your Full Name" required />
       <input type="tel" id="f-phone" placeholder="Mobile Number" required />
+      <div class="trip-type-row" style="margin-bottom:10px">
+        <button type="button" class="trip-type-btn active" id="f-btn-oneway" onclick="setFormTripType('oneway')">One Way</button>
+        <button type="button" class="trip-type-btn" id="f-btn-roundtrip" onclick="setFormTripType('roundtrip')">Round Trip</button>
+      </div>
       <div class="input-group" style="margin-bottom:10px">
         <div class="input-with-icon">
           <span class="input-icon">📍</span>
           <input type="text" id="f-from" placeholder="From (City / Area)" autocomplete="off" required />
           <span class="clear-btn" onclick="document.getElementById('f-from').value='';document.getElementById('f-from-sug').innerHTML='';formPickupCoord=null">×</span>
+          <span class="map-pick-btn" onclick="openPicker('form-from')" title="Pick on map">📍</span>
         </div>
         <div class="suggestions" id="f-from-sug"></div>
       </div>
@@ -360,6 +393,7 @@
           <span class="input-icon">📌</span>
           <input type="text" id="f-to" placeholder="To (City / Area)" autocomplete="off" required />
           <span class="clear-btn" onclick="document.getElementById('f-to').value='';document.getElementById('f-to-sug').innerHTML='';formDropCoord=null">×</span>
+          <span class="map-pick-btn" onclick="openPicker('form-to')" title="Pick on map">📍</span>
         </div>
         <div class="suggestions" id="f-to-sug"></div>
       </div>
@@ -376,12 +410,6 @@
   <!-- Confirmation panel (shown after form submit) -->
   <div id="booking-confirm" style="display:none">
     <div id="confirm-details"></div>
-    <div class="confirm-fare-box">
-      <div class="cfl">💰 Estimated Fare</div>
-      <div class="cfa" id="confirm-fare-amount">—</div>
-      <div class="cfs" id="confirm-fare-sub"></div>
-      <div class="cfn">⚠️ Toll fees (if any) to be paid by customer &nbsp;·&nbsp; Fare is an estimate</div>
-    </div>
     <button class="submit-btn" style="background:var(--wa);box-shadow:0 4px 16px rgba(37,211,102,0.35);border:none" onclick="doSendWhatsApp()">
       ✅ Confirm &amp; Send to WhatsApp
     </button>
@@ -444,8 +472,30 @@
   </ul>
 </div>
 
+<!-- Location Picker Sheet -->
+<div class="sheet" id="picker-sheet" style="max-height:92vh">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="picker-title">Pick Location</div>
+  <div id="picker-map"></div>
+  <div class="picker-status" id="picker-status">Tap anywhere on the map to pin a location</div>
+  <button class="add-btn" id="picker-confirm-btn" onclick="confirmPickerLocation()" disabled>✅ Confirm Location</button>
+</div>
+
 <!-- Overlay -->
 <div class="overlay" id="overlay" onclick="closeAllSheets()"></div>
+
+<!-- Booking Details Modal -->
+<div class="modal-overlay" id="booking-modal" onclick="if(event.target===this)closeBookingModal()">
+  <div class="modal-card">
+    <div class="modal-title">📋 Your Details</div>
+    <div class="modal-sub">Enter your name and number — we'll include them in your WhatsApp booking request.</div>
+    <input class="modal-input" type="text" id="modal-name" placeholder="Your Full Name" />
+    <input class="modal-input" type="tel" id="modal-phone" placeholder="Mobile Number" />
+    <div class="modal-err" id="modal-err"></div>
+    <button class="modal-send-btn" onclick="submitModalBooking()">💬 Send Booking via WhatsApp</button>
+    <button class="modal-cancel-btn" onclick="closeBookingModal()">Cancel</button>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -502,7 +552,7 @@
       const d = document.createElement('div');
       d.className = 'veh-btn' + (i === 0 ? ' active' : '');
       d.dataset.id = v.id;
-      d.innerHTML = `<div class="veh-icon">${v.icon}</div><div class="veh-name">${v.name}</div><div class="veh-rate">₹${v.perKm}/km</div>`;
+      d.innerHTML = `<div class="veh-icon">${v.icon}</div><div class="veh-name">${v.name}</div>`;
       d.onclick = () => {
         document.querySelectorAll('.veh-btn').forEach(b => b.classList.remove('active'));
         d.classList.add('active');
@@ -513,8 +563,24 @@
 
     const sel = document.getElementById('f-vehicle');
     sel.innerHTML = vehicles.map(v =>
-      `<option value="${v.name} (${v.desc})">${v.icon} ${v.name} — ${v.desc} · ₹${v.base}+₹${v.perKm}/km</option>`
+      `<option value="${v.name} (${v.desc})">${v.icon} ${v.name} — ${v.desc}</option>`
     ).join('');
+  }
+
+  // ── TRIP TYPE ──────────────────────────────────────────────
+  let tripType = 'oneway';
+  let formTripType = 'oneway';
+
+  function setTripType(type) {
+    tripType = type;
+    document.getElementById('btn-oneway').classList.toggle('active', type === 'oneway');
+    document.getElementById('btn-roundtrip').classList.toggle('active', type === 'roundtrip');
+  }
+
+  function setFormTripType(type) {
+    formTripType = type;
+    document.getElementById('f-btn-oneway').classList.toggle('active', type === 'oneway');
+    document.getElementById('f-btn-roundtrip').classList.toggle('active', type === 'roundtrip');
   }
 
   // ── SWAP / CLEAR ───────────────────────────────────────────
@@ -652,22 +718,6 @@
     return steps.some(s => ['toll','plaza','naka','expressway'].some(k => (s.name||'').toLowerCase().includes(k)));
   }
 
-  async function geocode(q) {
-    try {
-      const h = { 'Accept-Language': 'en' };
-      // Pass 1: India-only, viewbox preference
-      const d1 = await (await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=15&addressdetails=1&countrycodes=in&viewbox=${SI_VIEWBOX}`, { headers: h })).json();
-      let hit = d1.find(i => isSI(i));
-      // Pass 2: global search filtered by state
-      if (!hit) {
-        const d2 = await (await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=15&addressdetails=1`, { headers: h })).json();
-        hit = d2.find(i => isSI(i));
-      }
-      if (!hit) return null;
-      return { lat: parseFloat(hit.lat), lon: parseFloat(hit.lon) };
-    } catch { return null; }
-  }
-
   async function calculateRoute() {
     hideError();
     if (!pickupCoord) {
@@ -693,13 +743,19 @@
       if (data.code !== 'Ok' || !data.routes.length) throw new Error('No route found between these locations.');
 
       const route = data.routes[0];
-      const distKm = route.distance / 1000;
-      const durMin = Math.round(route.duration / 60);
-      const v = vehicles.find(x => x.id === selectedVehicle) || vehicles[0];
-      const driverFee = parseInt(getSettings().driverFee || 0);
-      const kmCharge  = Math.round(distKm * v.perKm);
-      const fare      = v.base + kmCharge + driverFee;
-      const allSteps  = route.legs.flatMap(l => l.steps);
+      const distKm      = route.distance / 1000;
+      const durMin      = Math.round(route.duration / 60);
+      const isRoundTrip = tripType === 'roundtrip';
+      const totalDistKm = isRoundTrip ? distKm * 2 : distKm;
+
+      const minDist = isRoundTrip ? 250 : 150;
+      if (totalDistKm < minDist) {
+        throw new Error(`Minimum distance for ${isRoundTrip ? 'Round Trip' : 'One Way'} trip is ${minDist} km. This route is only ${totalDistKm.toFixed(1)} km.`);
+      }
+      const v            = vehicles.find(x => x.id === selectedVehicle) || vehicles[0];
+      const driverFee    = parseInt(getSettings().driverFee || 0);
+      const fare         = Math.round(driverFee + (v.perKm * totalDistKm));
+      const allSteps     = route.legs.flatMap(l => l.steps);
       const tollDetected = hasTolls(allSteps);
 
       initMap();
@@ -712,10 +768,10 @@
       routeLayer   = L.geoJSON(route.geometry, { style:{ color:'#6C63FF', weight:5, opacity:0.85 } }).addTo(map);
       map.fitBounds(routeLayer.getBounds(), { padding:[30,30] });
 
-      document.getElementById('res-distance').textContent = distKm >= 1 ? distKm.toFixed(1)+' km' : Math.round(route.distance)+' m';
-      document.getElementById('res-duration').textContent = durMin >= 60 ? Math.floor(durMin/60)+'h '+(durMin%60)+'m' : durMin+' min';
-      document.getElementById('res-fare').textContent     = '₹'+fare.toLocaleString('en-IN');
-      const breakdown = `₹${v.base} base + ₹${kmCharge} km${driverFee > 0 ? ' + ₹'+driverFee+' driver' : ''}`;
+      document.getElementById('res-distance').textContent    = totalDistKm.toFixed(1) + ' km' + (isRoundTrip ? ' (round trip)' : '');
+      document.getElementById('res-duration').textContent    = durMin >= 60 ? Math.floor(durMin/60)+'h '+(durMin%60)+'m' : durMin+' min';
+      document.getElementById('res-fare').textContent        = '₹' + fare.toLocaleString('en-IN');
+      const breakdown = `₹${v.perKm}/km × ${totalDistKm.toFixed(1)} km${driverFee > 0 ? ' + ₹'+driverFee+' driver' : ''}`;
       document.getElementById('res-vehicle-name').textContent = v.name + ' · ' + breakdown;
       document.getElementById('res-vehicle-icon').textContent = v.icon;
 
@@ -763,7 +819,8 @@
     } catch(e) {}
     const dtLabel = time ? `${dateLabel} at ${time}` : dateLabel;
 
-    bookingData = { name, phone, from, to, date, time, dtLabel, vehVal, vehObj, note };
+    const tripLabel = formTripType === 'oneway' ? 'One Way' : 'Round Trip';
+    bookingData = { name, phone, from, to, date, time, dtLabel, vehVal, vehObj, note, tripLabel };
 
     // Switch to confirmation panel
     document.getElementById('booking-form-wrap').style.display = 'none';
@@ -773,6 +830,7 @@
 
     // Fill trip detail rows
     const rows = [
+      ['🗺️ Trip Type',   tripLabel],
       ['👤 Name',        name],
       ['📱 Phone',       phone],
       ['📍 From',        from],
@@ -783,50 +841,21 @@
     if (note) rows.push(['📝 Note', note]);
     document.getElementById('confirm-details').innerHTML =
       rows.map(([l, v]) => `<div class="confirm-row"><span class="cr-label">${l}</span><span class="cr-val">${v}</span></div>`).join('');
-
-    // Calculate fare estimate
-    const fareAmountEl = document.getElementById('confirm-fare-amount');
-    const fareSubEl    = document.getElementById('confirm-fare-sub');
-    fareAmountEl.innerHTML = `<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span> Calculating…`;
-    fareSubEl.textContent = '';
-
-    if (formPickupCoord && formDropCoord && vehObj) {
-      try {
-        const url = `https://router.project-osrm.org/route/v1/driving/${formPickupCoord.lon},${formPickupCoord.lat};${formDropCoord.lon},${formDropCoord.lat}?overview=false`;
-        const resp = await (await fetch(url)).json();
-        if (resp.code === 'Ok' && resp.routes.length) {
-          const distKm    = resp.routes[0].distance / 1000;
-          const driverFee = parseInt(getSettings().driverFee || 0);
-          const kmCharge  = Math.round(distKm * vehObj.perKm);
-          const fare      = vehObj.base + kmCharge + driverFee;
-          fareAmountEl.textContent = '₹' + fare.toLocaleString('en-IN');
-          fareSubEl.textContent    = `₹${vehObj.base} base + ₹${kmCharge} km${driverFee > 0 ? ' + ₹'+driverFee+' driver' : ''} · ${distKm.toFixed(1)} km`;
-          bookingData.fareText      = '₹' + fare.toLocaleString('en-IN');
-          bookingData.fareBreakdown = fareSubEl.textContent;
-        } else {
-          fareAmountEl.textContent = 'Route unavailable';
-        }
-      } catch {
-        fareAmountEl.textContent = 'Unable to calculate';
-      }
-    } else {
-      fareAmountEl.textContent = 'Select places from dropdown for fare';
-      fareSubEl.textContent    = '';
-    }
   }
 
   function doSendWhatsApp() {
     if (!bookingData) return;
-    const { name, phone, from, to, dtLabel, vehVal, note, fareText, fareBreakdown } = bookingData;
+    const { name, phone, from, to, dtLabel, vehVal, note, tripLabel } = bookingData;
     const msg =
 `🚖 *Ahamed Cabs – Booking Request*
 
+🗺️ Trip Type: ${tripLabel}
 👤 Name: ${name}
 📱 Phone: ${phone}
 📍 From: ${from}
 📌 To: ${to}
 📅 Date & Time: ${dtLabel}
-🚗 Vehicle: ${vehVal}${fareText ? '\n💰 Est. Fare: '+fareText+(fareBreakdown ? ' ('+fareBreakdown+')' : '') : ''}${note ? '\n📝 Note: '+note : ''}
+🚗 Vehicle: ${vehVal}${note ? '\n📝 Note: '+note : ''}
 
 ⚠️ Toll fees (if any) to be paid by customer
 
@@ -839,39 +868,68 @@ _Please confirm the booking._`;
     document.getElementById('booking-confirm').style.display  = 'none';
   }
 
-  // ── SHARE ROUTE TO WHATSAPP ────────────────────────────────
+  // ── SHARE ROUTE TO WHATSAPP (with name/phone popup) ────────
+  let pendingRouteData = null;
+
   function shareRouteWhatsApp() {
     if (!pickupCoord || !dropCoord) return;
-    const pickup   = document.getElementById('pickup-input').value;
-    const drop     = document.getElementById('drop-input').value;
-    const dist     = document.getElementById('res-distance').textContent;
-    const dur      = document.getElementById('res-duration').textContent;
-    const fare     = document.getElementById('res-fare').textContent;
-    const veh      = document.getElementById('res-vehicle-name').textContent;
-    const tollTxt  = document.getElementById('toll-text').textContent;
-    const mapsUrl  = `https://www.google.com/maps/dir/${pickupCoord.lat},${pickupCoord.lon}/${dropCoord.lat},${dropCoord.lon}`;
-    const fareBreakdown = document.getElementById('res-vehicle-name').textContent;
+    pendingRouteData = {
+      pickup:   document.getElementById('pickup-input').value,
+      drop:     document.getElementById('drop-input').value,
+      dist:     document.getElementById('res-distance').textContent,
+      dur:      document.getElementById('res-duration').textContent,
+      fare:     document.getElementById('res-fare').textContent,
+      vehName:  document.getElementById('res-vehicle-name').textContent.split(' · ')[0],
+      tollTxt:  document.getElementById('toll-text').textContent,
+      mapsUrl:  `https://www.google.com/maps/dir/${pickupCoord.lat},${pickupCoord.lon}/${dropCoord.lat},${dropCoord.lon}`,
+      tripLabel: tripType === 'oneway' ? 'One Way' : 'Round Trip',
+    };
+    document.getElementById('modal-name').value  = '';
+    document.getElementById('modal-phone').value = '';
+    document.getElementById('modal-err').textContent = '';
+    document.getElementById('booking-modal').classList.add('show');
+  }
+
+  function closeBookingModal() {
+    document.getElementById('booking-modal').classList.remove('show');
+    pendingRouteData = null;
+  }
+
+  function submitModalBooking() {
+    const name  = document.getElementById('modal-name').value.trim();
+    const phone = document.getElementById('modal-phone').value.trim();
+    const errEl = document.getElementById('modal-err');
+    if (!name)  { errEl.textContent = 'Please enter your name.';         return; }
+    if (!phone) { errEl.textContent = 'Please enter your phone number.'; return; }
+    errEl.textContent = '';
+
+    const d = pendingRouteData;
+    if (!d) return;
+
     const msg =
-`🚖 *Ahamed Cabs – Trip Details*
+`🚖 *Ahamed Cabs – Booking Request*
 
-📍 *From:* ${pickup}
-🏁 *To:* ${drop}
+🗺️ *Trip Type:* ${d.tripLabel}
+👤 *Name:* ${name}
+📱 *Phone:* ${phone}
+📍 *From:* ${d.pickup}
+🏁 *To:* ${d.drop}
+🚗 *Vehicle:* ${d.vehName}
 
-📏 *Distance:* ${dist}
-⏱️ *Est. Time:* ${dur}
-🚗 *Vehicle:* ${veh.split(' · ')[0]}
-💰 *Est. Fare:* ${fare}
-   _(${fareBreakdown.split(' · ').slice(1).join(' · ')})_
+📏 *Distance:* ${d.dist}
+⏱️ *Est. Time:* ${d.dur}
+💰 *Est. Fare:* ${d.fare}
 
-🛣️ ${tollTxt}
+🛣️ ${d.tollTxt}
 ⚠️ *Toll fees (if any) to be paid by customer*
 
-🗺️ *View Route on Map:*
-${mapsUrl}
+🗺️ *View Route:*
+${d.mapsUrl}
 
-_Fare is an estimate. Actual fare may vary._
-_To confirm booking, please reply with your name & phone number._`;
+_Please confirm the booking._`;
+
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
+    closeBookingModal();
   }
 
   // ── NAV HIDE TOGGLE ────────────────────────────────────────
@@ -920,6 +978,105 @@ _To confirm booking, please reply with your name & phone number._`;
   function navHome()    { closeAllSheets(); window.scrollTo({ top:0, behavior:'smooth' }); }
   function navContact() { closeAllSheets(); document.getElementById('contact-section').scrollIntoView({ behavior:'smooth' }); }
 
+  // ── MAP PICKER ─────────────────────────────────────────────
+  let pickerMap = null, pickerMarker = null;
+  let pickerField = null;
+  let pickerSelectedCoord = null, pickerSelectedName = null;
+
+  function openPicker(field) {
+    pickerField = field;
+    pickerSelectedCoord = null;
+    pickerSelectedName = null;
+
+    const titles = {
+      pickup: 'Pick Pickup Location',
+      drop: 'Pick Drop Location',
+      'form-from': 'Pick From Location',
+      'form-to': 'Pick To Location',
+    };
+    document.getElementById('picker-title').textContent = titles[field] || 'Pick Location';
+    document.getElementById('picker-status').textContent = 'Tap anywhere on the map to pin a location';
+    document.getElementById('picker-confirm-btn').disabled = true;
+
+    closeAllSheets();
+    document.getElementById('picker-sheet').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+    activeSheet = 'picker-sheet';
+
+    setTimeout(() => {
+      if (!pickerMap) {
+        pickerMap = L.map('picker-map').setView([11.0, 78.5], 7);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+          subdomains: 'abcd', maxZoom: 19,
+        }).addTo(pickerMap);
+        pickerMap.on('click', onPickerClick);
+      }
+      pickerMap.invalidateSize();
+    }, 320);
+  }
+
+  async function onPickerClick(e) {
+    const { lat, lng } = e.latlng;
+    if (pickerMarker) pickerMap.removeLayer(pickerMarker);
+    pickerMarker = L.marker([lat, lng]).addTo(pickerMap);
+
+    const statusEl = document.getElementById('picker-status');
+    statusEl.textContent = '🔍 Identifying location…';
+    document.getElementById('picker-confirm-btn').disabled = true;
+    pickerSelectedCoord = null;
+    pickerSelectedName = null;
+
+    try {
+      const resp = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await resp.json();
+      const state = (data.address?.state || '').toLowerCase();
+      const inRegion = ['tamil nadu', 'kerala'].some(s => state.includes(s));
+      if (!inRegion) {
+        statusEl.textContent = '⚠️ Please pick a location in Tamil Nadu or Kerala.';
+        return;
+      }
+      const a = data.address || {};
+      const nameParts = [
+        a.village || a.suburb || a.neighbourhood || a.town || a.city_district || a.city || '',
+        a.district || a.county || '',
+        a.state || '',
+      ].filter(Boolean);
+      pickerSelectedName = nameParts.join(', ') || data.display_name;
+      pickerSelectedCoord = { lat, lon: lng };
+      statusEl.textContent = '📍 ' + pickerSelectedName;
+      document.getElementById('picker-confirm-btn').disabled = false;
+    } catch {
+      statusEl.textContent = '⚠️ Could not identify location. Try another spot.';
+    }
+  }
+
+  function confirmPickerLocation() {
+    if (!pickerSelectedCoord || !pickerSelectedName) return;
+    switch (pickerField) {
+      case 'pickup':
+        document.getElementById('pickup-input').value = pickerSelectedName;
+        pickupCoord = pickerSelectedCoord;
+        break;
+      case 'drop':
+        document.getElementById('drop-input').value = pickerSelectedName;
+        dropCoord = pickerSelectedCoord;
+        break;
+      case 'form-from':
+        document.getElementById('f-from').value = pickerSelectedName;
+        formPickupCoord = pickerSelectedCoord;
+        break;
+      case 'form-to':
+        document.getElementById('f-to').value = pickerSelectedName;
+        formDropCoord = pickerSelectedCoord;
+        break;
+    }
+    closeAllSheets();
+  }
+
   function renderCarsSheet() {
     const c = document.getElementById('cars-sheet-cards');
     c.innerHTML = '';
@@ -928,7 +1085,7 @@ _To confirm booking, please reply with your name & phone number._`;
     vs.forEach(v => {
       const card = document.createElement('div');
       card.className = 'car-card';
-      card.innerHTML = `<div class="cc-icon">${v.icon}</div><div class="cc-name">${v.name}</div><div class="cc-desc">${v.desc}</div><div class="cc-price">₹${v.base} base · ₹${v.perKm}/km</div>`;
+      card.innerHTML = `<div class="cc-icon">${v.icon}</div><div class="cc-name">${v.name}</div><div class="cc-desc">${v.desc}</div>`;
       c.appendChild(card);
     });
   }
