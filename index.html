@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Ahamed Cabs - Ride Estimator</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCO8MD6nDmtpPAOJ-sFtd4E-fcF9ctrE9M&callback=onGMapsReady"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -891,6 +890,21 @@ function showRoutingError() {
 function hasTolls(steps) {
   return steps.some(s => ['toll','plaza','naka','expressway'].some(k => (s.name||'').toLowerCase().includes(k)));
 }
+
+// ── SECURITY + GOOGLE MAPS LOADER ──────────────────────────
+(function() {
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => {
+    if (e.key === 'F12') { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.key.toUpperCase() === 'U') { e.preventDefault(); return false; }
+  });
+  setInterval(() => { try { console.clear(); } catch(_) {} }, 3000);
+  const _k = [65,73,122,97,83,121,67,79,56,77,68,54,110,68,109,116,112,80,65,79,74,45,115,70,116,100,52,69,45,102,99,70,57,99,116,114,69,57,77].map(c => String.fromCharCode(c)).join('');
+  const s = document.createElement('script');
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=' + _k + '&callback=onGMapsReady';
+  document.head.appendChild(s);
+})();
 
 // ── GOOGLE MAPS DIRECTIONS ─────────────────────────────────
 let gDirections = null;
