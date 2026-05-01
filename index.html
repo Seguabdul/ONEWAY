@@ -8,88 +8,56 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #6C63FF;
-      --surface: #ffffff;
-      --bg: #f4f4fb;
-      --text: #1a1a2e;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --danger: #ef4444;
-      --wa: #25D366;
-      --radius: 14px;
-      --shadow: 0 4px 24px rgba(108,99,255,0.10);
-      --nav-h: 64px;
+      --primary: #6C63FF; --surface: #fff; --bg: #f4f4fb;
+      --text: #1a1a2e; --muted: #6b7280; --border: #e5e7eb;
+      --danger: #ef4444; --wa: #25D366; --radius: 14px;
+      --shadow: 0 4px 24px rgba(108,99,255,0.10); --nav-h: 64px;
     }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: calc(var(--nav-h) + 16px);
-    }
-
-    /* Header */
-    header { background: var(--primary); color: #fff; padding: 16px 20px 14px; display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 12px rgba(108,99,255,0.3); }
-    .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Tamil', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(var(--nav-h) + 16px); }
+    header { background: var(--primary); color: #fff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 12px rgba(108,99,255,0.3); }
+    .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
     .tagline { font-size: 11px; opacity: 0.8; margin-top: 2px; }
-
-    /* Card */
+    .lang-btn { background: rgba(255,255,255,0.18); border: 1.5px solid rgba(255,255,255,0.5); color: #fff; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; flex-shrink: 0; margin-left: 10px; }
+    .lang-btn:active { background: rgba(255,255,255,0.35); }
     .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 16px; margin: 16px 14px; }
-
-    /* Input group */
     .input-group { margin-bottom: 12px; position: relative; }
     .input-group label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 5px; display: block; }
     .input-with-icon { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 10px; background: #fafafa; overflow: hidden; transition: border-color 0.2s; }
     .input-with-icon:focus-within { border-color: var(--primary); background: #fff; }
-    .input-icon { width: 40px; text-align: center; font-size: 16px; flex-shrink: 0; }
-    .input-with-icon input { flex: 1; border: none; background: transparent; padding: 12px 10px 12px 0; font-size: 15px; color: var(--text); outline: none; width: 100%; min-width: 0; }
+    .input-icon { width: 38px; text-align: center; font-size: 16px; flex-shrink: 0; }
+    .input-with-icon input { flex: 1; border: none; background: transparent; padding: 12px 6px 12px 0; font-size: 15px; color: var(--text); outline: none; width: 100%; min-width: 0; }
     .input-with-icon input::placeholder { color: #b0b3be; }
-    .clear-btn { width: 28px; text-align: center; cursor: pointer; color: #b0b3be; font-size: 18px; padding: 0 2px; flex-shrink: 0; }
-    .map-pick-btn { width: 34px; text-align: center; cursor: pointer; font-size: 17px; padding: 0 2px; flex-shrink: 0; background: none; border: none; color: var(--primary); display: flex; align-items: center; justify-content: center; }
-
-    /* Suggestions */
+    .clear-btn { width: 26px; text-align: center; cursor: pointer; color: #b0b3be; font-size: 18px; flex-shrink: 0; background: none; border: none; }
+    .map-pick-btn { width: 32px; text-align: center; cursor: pointer; font-size: 17px; flex-shrink: 0; background: none; border: none; color: var(--primary); display: flex; align-items: center; justify-content: center; }
     .suggestions { position: absolute; left: 0; right: 0; background: #fff; border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; z-index: 2000; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.10); }
     .suggestions div { padding: 11px 14px; font-size: 14px; cursor: pointer; border-bottom: 1px solid var(--border); line-height: 1.4; }
     .suggestions div:last-child { border-bottom: none; }
     .suggestions div:hover { background: #f0eeff; }
     .sug-main { font-weight: 500; color: var(--text); }
     .sug-sub { font-size: 12px; color: var(--muted); }
-
-    /* Swap */
     .swap-row { display: flex; justify-content: center; margin: -4px 0 4px; }
     .swap-btn { background: var(--primary); border: none; border-radius: 50%; width: 32px; height: 32px; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(108,99,255,0.3); }
-
-    /* Trip type toggle */
     .trip-toggle { display: flex; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
-    .trip-toggle button { flex: 1; border: none; padding: 11px 6px; font-size: 13px; font-weight: 700; cursor: pointer; background: #fafafa; color: var(--muted); transition: all 0.18s; font-family: inherit; letter-spacing: 0.2px; }
+    .trip-toggle button { flex: 1; border: none; padding: 11px 4px; font-size: 13px; font-weight: 700; cursor: pointer; background: #fafafa; color: var(--muted); font-family: inherit; transition: all 0.18s; }
     .trip-toggle button.active { background: var(--primary); color: #fff; }
-
-    /* Vehicle row */
+    .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
     .vehicle-row { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
     .vehicle-row::-webkit-scrollbar { display: none; }
-    .veh-btn { flex-shrink: 0; min-width: 120px; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 8px; cursor: pointer; background: #fafafa; text-align: center; transition: all 0.18s; }
+    .veh-btn { flex-shrink: 0; min-width: 130px; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 8px; cursor: pointer; background: #fafafa; text-align: center; transition: all 0.18s; }
     .veh-btn.active { border-color: var(--primary); background: #f0eeff; color: var(--primary); }
     .veh-btn .veh-icon { font-size: 24px; }
     .veh-btn .veh-name { font-size: 12px; font-weight: 700; margin-top: 3px; }
     .veh-btn .veh-seats { font-size: 10px; color: var(--muted); margin-top: 1px; }
     .veh-btn .veh-rate { font-size: 11px; color: var(--primary); font-weight: 600; margin-top: 3px; }
-
-    /* Calc button */
     .calc-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(108,99,255,0.35); transition: transform 0.1s; }
     .calc-btn:active { transform: scale(0.98); }
     .calc-btn:disabled { background: #c0bdf5; cursor: not-allowed; box-shadow: none; }
-
-    /* Map */
     #map { height: 280px; border-radius: var(--radius); margin: 0 14px; overflow: hidden; box-shadow: var(--shadow); display: none; }
-
-    /* Results */
     .results-card { display: none; }
     .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .stat-box { background: var(--bg); border-radius: 10px; padding: 12px 10px; text-align: center; }
     .stat-val { font-size: 20px; font-weight: 800; color: var(--primary); line-height: 1; }
     .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* Detailed fare box */
     .fare-box { grid-column: span 2; background: linear-gradient(135deg, var(--primary), #9c96ff); color: #fff; border-radius: 12px; padding: 14px 16px; }
     .fare-top { display: flex; align-items: flex-start; justify-content: space-between; }
     .fare-label { font-size: 12px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -99,28 +67,16 @@
     .fare-detail-row { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; }
     .fare-detail-row .fd-label { opacity: 0.8; }
     .fare-detail-row .fd-val { font-weight: 600; }
-    .fare-min-note { font-size: 11px; margin-top: 6px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 8px; }
-
-    /* Real-time km notice */
-    .realtime-note { display: flex; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-size: 12px; color: #92400e; line-height: 1.5; }
-
-    /* Toll */
+    .realtime-note { display: flex; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-size: 12px; color: #92400e; line-height: 1.6; }
     .toll-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
     .toll-row.has-toll { background: #fff7ed; color: #b45309; border: 1px solid #fde68a; }
     .toll-row.no-toll  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
     .toll-notice { display: flex; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: #92400e; line-height: 1.5; }
-
-    /* Spinner / Error */
     .spinner-wrap { display: none; justify-content: center; align-items: center; padding: 20px; gap: 12px; color: var(--muted); font-size: 14px; }
     .spinner { width: 22px; height: 22px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .error-msg { display: none; background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); border-radius: 10px; padding: 12px 14px; font-size: 13px; margin-top: 10px; }
-    .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
-
-    /* Field label inside form */
     .field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); display: block; margin-bottom: 4px; }
-
-    /* Contact */
     .phone-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; margin-bottom: 10px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--muted); }
     .phone-row a { color: var(--primary); font-weight: 600; text-decoration: none; }
     .whatsapp-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--wa); color: #fff; text-decoration: none; border-radius: 12px; padding: 14px 16px; font-size: 16px; font-weight: 700; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(37,211,102,0.35); }
@@ -128,100 +84,80 @@
     .contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { border-color: var(--primary); background: #fff; }
     .contact-form textarea { resize: none; height: 68px; }
     .submit-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(108,99,255,0.35); }
-
-    /* Footer */
     .footer-note { text-align: center; font-size: 11px; color: var(--muted); padding: 8px 16px 6px; }
-
-    /* Confirmation panel */
-    .confirm-row { display:flex; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; }
-    .confirm-row:last-child { border-bottom:none; }
-    .cr-label { color:var(--muted); font-size:13px; flex-shrink:0; }
-    .cr-val { text-align:right; font-weight:500; word-break:break-word; max-width:60%; }
-    .confirm-fare-box { background:linear-gradient(135deg,var(--primary),#9c96ff); color:#fff; border-radius:12px; padding:14px 16px; margin:14px 0; }
-    .cfl { font-size:13px; opacity:0.85; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.4px; }
-    .cfa { font-size:28px; font-weight:800; min-height:36px; display:flex; align-items:center; gap:8px; }
-    .cfs { font-size:11px; opacity:0.75; margin-top:2px; }
-    .cfn { font-size:11px; margin-top:8px; background:rgba(0,0,0,0.15); border-radius:6px; padding:5px 8px; line-height:1.5; }
-    .edit-back-btn { width:100%; background:#f3f4f6; color:var(--text); border:none; border-radius:12px; padding:12px; font-size:14px; font-weight:600; cursor:pointer; margin-top:8px; }
-    .call-note { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 14px; margin-top:12px; font-size:13px; color:#166534; line-height:1.6; display:flex; gap:8px; align-items:flex-start; }
-
-    /* Book buttons row */
+    .confirm-row { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .confirm-row:last-child { border-bottom: none; }
+    .cr-label { color: var(--muted); font-size: 13px; flex-shrink: 0; }
+    .cr-val { text-align: right; font-weight: 500; word-break: break-word; max-width: 60%; }
+    .confirm-fare-box { background: linear-gradient(135deg,var(--primary),#9c96ff); color: #fff; border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
+    .cfl { font-size: 12px; opacity: 0.85; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .cfa { font-size: 28px; font-weight: 800; min-height: 36px; display: flex; align-items: center; gap: 8px; }
+    .cfs { font-size: 11px; opacity: 0.75; margin-top: 2px; }
+    .cfn { font-size: 11px; margin-top: 8px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 5px 8px; line-height: 1.6; }
+    .edit-back-btn { width: 100%; background: #f3f4f6; color: var(--text); border: none; border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    .call-note { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 14px; margin-top: 12px; font-size: 13px; color: #166534; line-height: 1.6; display: flex; gap: 8px; align-items: flex-start; }
     .book-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
     .book-wa-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--wa); color: #fff; border: none; border-radius: 12px; padding: 14px 10px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(37,211,102,0.3); }
-    .book-wa-btn:active { filter: brightness(0.92); }
     .book-call-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 14px 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; box-shadow: 0 4px 16px rgba(108,99,255,0.25); }
-    .book-call-btn:active { filter: brightness(0.92); }
-
-    /* ── Map Picker Modal ── */
     .map-picker-modal { display: none; position: fixed; inset: 0; z-index: 99999; flex-direction: column; background: #000; }
     .map-picker-modal.open { display: flex; }
     .picker-header { background: var(--surface); display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .picker-header-title { font-weight: 700; font-size: 16px; }
-    .picker-close { border: none; background: none; font-size: 26px; cursor: pointer; color: var(--muted); line-height: 1; padding: 0 4px; }
+    .picker-close { border: none; background: none; font-size: 26px; cursor: pointer; color: var(--muted); line-height: 1; }
     .picker-map-wrap { flex: 1; position: relative; min-height: 0; }
     #picker-map { width: 100%; height: 100%; }
     .picker-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); font-size: 36px; pointer-events: none; z-index: 1000; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45)); }
     .picker-footer { background: var(--surface); padding: 12px 16px 16px; border-top: 1px solid var(--border); flex-shrink: 0; }
-    .picker-loc-name { font-size: 13px; color: var(--text); margin-bottom: 10px; min-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-    .picker-loc-sub { font-size: 11px; color: var(--muted); margin-top: -7px; margin-bottom: 10px; }
+    .picker-loc-name { font-size: 13px; color: var(--text); margin-bottom: 4px; min-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .picker-loc-sub { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
     .picker-confirm-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
-
-    /* ── Bottom Nav ── */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h); background: var(--surface); border-top: 1px solid var(--border); display: flex; align-items: stretch; z-index: 9999; box-shadow: 0 -4px 20px rgba(0,0,0,0.07); transition: transform 0.35s cubic-bezier(0.32,0.72,0,1); }
     .bottom-nav.nav-hidden { transform: translateY(calc(var(--nav-h) - 22px)); }
-    .nav-handle { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 5px 18px 2px; cursor: pointer; color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: 0.3px; box-shadow: 0 -3px 10px rgba(0,0,0,0.06); white-space: nowrap; display: flex; align-items: center; gap: 4px; user-select: none; }
+    .nav-handle { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; padding: 5px 18px 2px; cursor: pointer; color: var(--muted); font-size: 10px; font-weight: 600; box-shadow: 0 -3px 10px rgba(0,0,0,0.06); white-space: nowrap; display: flex; align-items: center; gap: 4px; user-select: none; }
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; cursor: pointer; font-family: inherit; color: var(--muted); font-size: 10px; font-weight: 500; text-decoration: none; transition: color 0.15s; -webkit-tap-highlight-color: transparent; padding: 6px 4px; }
     .nav-item .n-icon { font-size: 21px; line-height: 1; }
     .nav-item.active, .nav-item:active { color: var(--primary); }
-
-    /* ── Bottom Sheet ── */
     .sheet { position: fixed; bottom: var(--nav-h); left: 0; right: 0; background: var(--surface); border-radius: 20px 20px 0 0; box-shadow: 0 -8px 40px rgba(0,0,0,0.14); z-index: 9998; max-height: 72vh; overflow-y: auto; padding: 0 16px 24px; transform: translateY(110%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); }
     .sheet.open { transform: translateY(0); }
     .sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 14px; }
     .sheet-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
-
-    /* Cars sheet */
     .car-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .car-card { border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; background: #fafafa; }
     .car-card .cc-icon { font-size: 30px; }
     .car-card .cc-name { font-size: 14px; font-weight: 700; margin-top: 5px; }
     .car-card .cc-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .car-card .cc-price { margin-top: 8px; background: #f0eeff; color: var(--primary); border-radius: 8px; padding: 5px 6px; font-size: 11px; font-weight: 600; line-height: 1.5; }
-    .car-card .cc-price-rt { margin-top: 4px; background: #f0fdf4; color: #166534; border-radius: 8px; padding: 5px 6px; font-size: 11px; font-weight: 600; line-height: 1.5; }
-
-    /* More sheet */
+    .car-card .cc-price { margin-top: 8px; background: #f0eeff; color: var(--primary); border-radius: 8px; padding: 5px 6px; font-size: 11px; font-weight: 600; line-height: 1.6; }
+    .car-card .cc-price-rt { margin-top: 4px; background: #f0fdf4; color: #166534; border-radius: 8px; padding: 5px 6px; font-size: 11px; font-weight: 600; line-height: 1.6; }
     .more-list { list-style: none; }
     .more-list li a { display: flex; align-items: center; gap: 12px; padding: 14px 2px; border-bottom: 1px solid var(--border); text-decoration: none; color: var(--text); font-size: 15px; }
     .more-list li:last-child a { border-bottom: none; }
     .ml-icon { font-size: 20px; width: 28px; text-align: center; }
     .ml-text { font-weight: 500; }
     .ml-sub { font-size: 12px; color: var(--muted); }
-
-    /* Overlay */
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9997; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .overlay.show { opacity: 1; pointer-events: all; }
-
     .leaflet-routing-container { display: none !important; }
   </style>
 </head>
 <body>
 
 <header>
-  <div>
+  <div style="flex:1;min-width:0">
     <div class="logo">🚖 Ahamed Cabs</div>
-    <div class="tagline">One Way Drop · Mother City – Ammapatinam</div>
+    <div class="tagline" id="tagline">One Way Drop · Mother City – Ammapatinam</div>
   </div>
+  <button class="lang-btn" id="lang-btn" onclick="toggleLang()">தமிழ்</button>
 </header>
 
 <!-- Booking Card -->
 <div class="card">
   <div class="input-group">
-    <label>Pickup Point</label>
+    <label id="lbl-pickup">Pickup Point</label>
     <div class="input-with-icon">
       <span class="input-icon">🟢</span>
       <input id="pickup-input" type="text" placeholder="Type or pick from map" autocomplete="off" />
-      <button class="map-pick-btn" onclick="openMapPicker('pickup')" title="Pick from map">📍</button>
-      <span class="clear-btn" onclick="clearInput('pickup')">×</span>
+      <button type="button" class="map-pick-btn" onclick="openMapPicker('pickup')">📍</button>
+      <button type="button" class="clear-btn" onclick="clearInput('pickup')">×</button>
     </div>
     <div class="suggestions" id="pickup-suggestions"></div>
   </div>
@@ -231,28 +167,28 @@
   </div>
 
   <div class="input-group">
-    <label>Drop Point</label>
+    <label id="lbl-drop">Drop Point</label>
     <div class="input-with-icon">
       <span class="input-icon">🔴</span>
       <input id="drop-input" type="text" placeholder="Type or pick from map" autocomplete="off" />
-      <button class="map-pick-btn" onclick="openMapPicker('drop')" title="Pick from map">📍</button>
-      <span class="clear-btn" onclick="clearInput('drop')">×</span>
+      <button type="button" class="map-pick-btn" onclick="openMapPicker('drop')">📍</button>
+      <button type="button" class="clear-btn" onclick="clearInput('drop')">×</button>
     </div>
     <div class="suggestions" id="drop-suggestions"></div>
   </div>
 
-  <div class="section-title">Trip Type</div>
+  <div class="section-title" id="lbl-trip-type">Trip Type</div>
   <div class="trip-toggle">
     <button id="btn-oneway" class="active" onclick="setTripType('oneway')">🔁 One Way</button>
     <button id="btn-roundtrip" onclick="setTripType('roundtrip')">↩️ Round Trip</button>
   </div>
 
-  <div class="section-title">Select Vehicle</div>
+  <div class="section-title" id="lbl-select-veh">Select Vehicle</div>
   <div class="vehicle-row" id="vehicle-row"></div>
 
   <div class="error-msg" id="error-msg"></div>
   <div class="spinner-wrap" id="spinner">
-    <div class="spinner"></div> Calculating route…
+    <div class="spinner"></div> <span id="lbl-calculating">Calculating route…</span>
   </div>
   <button class="calc-btn" id="calc-btn" onclick="calculateRoute()">Calculate Route &amp; Fare →</button>
 </div>
@@ -262,20 +198,20 @@
 
 <!-- Results -->
 <div class="card results-card" id="results-card">
-  <div class="section-title">Trip Summary</div>
+  <div class="section-title" id="lbl-trip-summary">Trip Summary</div>
   <div class="results-grid">
     <div class="stat-box">
       <div class="stat-val" id="res-distance">—</div>
-      <div class="stat-lbl">Distance</div>
+      <div class="stat-lbl" id="lbl-distance">Distance</div>
     </div>
     <div class="stat-box">
       <div class="stat-val" id="res-duration">—</div>
-      <div class="stat-lbl">Est. Time</div>
+      <div class="stat-lbl" id="lbl-duration">Est. Time</div>
     </div>
     <div class="fare-box">
       <div class="fare-top">
         <div>
-          <div class="fare-label">Estimated Fare</div>
+          <div class="fare-label" id="lbl-est-fare">Estimated Fare</div>
           <div class="fare-amount" id="res-fare">—</div>
           <div class="fare-vehicle" id="res-vehicle-name">—</div>
         </div>
@@ -287,16 +223,15 @@
         <span class="fd-val" id="res-km-charge">—</span>
       </div>
       <div class="fare-detail-row">
-        <span class="fd-label">Driver Fee</span>
+        <span class="fd-label" id="lbl-driver-fee">Driver Fee</span>
         <span class="fd-val" id="res-driver-fee">—</span>
       </div>
-      <div id="res-min-note" class="fare-min-note" style="display:none"></div>
     </div>
   </div>
 
   <div class="realtime-note">
     <span>ℹ️</span>
-    <span><strong>This is an estimated fare.</strong> The final fare will be calculated on actual kilometres run on the meter during the trip.</span>
+    <span id="lbl-realtime-note"><strong>This is an estimated fare.</strong> Final fare is calculated on actual kilometres run during the trip.</span>
   </div>
 
   <div class="toll-row no-toll" id="toll-row">
@@ -305,147 +240,136 @@
   </div>
   <div class="toll-notice">
     <span>⚠️</span>
-    <span><strong>Toll fees, if any, must be paid by the customer</strong> and are not included in the above fare estimate.</span>
+    <span id="lbl-toll-notice"><strong>Toll fees, if any, must be paid by the customer</strong> and are not included in the fare estimate.</span>
   </div>
 
   <div class="book-btns">
-    <button class="book-wa-btn" onclick="shareRouteWhatsApp()">💬 Book via WhatsApp</button>
-    <a class="book-call-btn" id="result-call-btn" href="#">📞 Book via Call</a>
+    <button class="book-wa-btn" onclick="shareRouteWhatsApp()" id="lbl-book-wa">💬 Book via WhatsApp</button>
+    <a class="book-call-btn" id="result-call-btn" href="#" data-lbl="book-call">📞 Book via Call</a>
   </div>
 </div>
 
 <!-- Contact -->
 <div class="card" id="contact-section">
-  <div class="section-title">📞 Book or Enquire</div>
+  <div class="section-title" id="lbl-book-enquire">📞 Book or Enquire</div>
   <div class="phone-row">
-    📱 Call us: <a id="phone-link" href="tel:+919952843600">+91 99528 43600</a>
+    <span id="lbl-call-us">📱 Call us:</span>&nbsp;<a id="phone-link" href="tel:+919952843600">+91 99528 43600</a>
   </div>
   <a id="wa-btn" href="#" class="whatsapp-btn" target="_blank" rel="noopener">
-    💬 Chat on WhatsApp
+    <span id="lbl-chat-wa">💬 Chat on WhatsApp</span>
   </a>
-  <div class="section-title">Send Booking Request</div>
+  <div class="section-title" id="lbl-send-booking">Send Booking Request</div>
 
-  <!-- Form -->
   <div id="booking-form-wrap">
     <form class="contact-form" id="booking-form" onsubmit="sendBookingWhatsApp(event)">
-
       <input type="text" id="f-name" placeholder="Your Full Name" required />
       <input type="tel" id="f-phone" placeholder="Mobile Number" required />
 
-      <!-- Trip type in form -->
-      <label class="field-label">Trip Type</label>
+      <label class="field-label" id="lbl-f-trip-type">Trip Type</label>
       <div class="trip-toggle" style="margin-bottom:10px">
         <button type="button" id="f-btn-oneway" class="active" onclick="setFormTripType('oneway')">🔁 One Way</button>
         <button type="button" id="f-btn-roundtrip" onclick="setFormTripType('roundtrip')">↩️ Round Trip</button>
       </div>
 
-      <!-- Pickup from -->
       <div class="input-group" style="margin-bottom:10px">
         <div class="input-with-icon">
           <span class="input-icon">📍</span>
           <input type="text" id="f-from" placeholder="From (City / Area)" autocomplete="off" required />
-          <button type="button" class="map-pick-btn" onclick="openMapPicker('f-from')" title="Pick from map">📍</button>
-          <span class="clear-btn" onclick="document.getElementById('f-from').value='';document.getElementById('f-from-sug').innerHTML='';formPickupCoord=null">×</span>
+          <button type="button" class="map-pick-btn" onclick="openMapPicker('f-from')">📍</button>
+          <button type="button" class="clear-btn" onclick="document.getElementById('f-from').value='';document.getElementById('f-from-sug').innerHTML='';formPickupCoord=null">×</button>
         </div>
         <div class="suggestions" id="f-from-sug"></div>
       </div>
 
-      <!-- Drop to -->
       <div class="input-group" style="margin-bottom:10px">
         <div class="input-with-icon">
           <span class="input-icon">📌</span>
           <input type="text" id="f-to" placeholder="To (City / Area)" autocomplete="off" required />
-          <button type="button" class="map-pick-btn" onclick="openMapPicker('f-to')" title="Pick from map">📍</button>
-          <span class="clear-btn" onclick="document.getElementById('f-to').value='';document.getElementById('f-to-sug').innerHTML='';formDropCoord=null">×</span>
+          <button type="button" class="map-pick-btn" onclick="openMapPicker('f-to')">📍</button>
+          <button type="button" class="clear-btn" onclick="document.getElementById('f-to').value='';document.getElementById('f-to-sug').innerHTML='';formDropCoord=null">×</button>
         </div>
         <div class="suggestions" id="f-to-sug"></div>
       </div>
 
-      <!-- Date & Time with labels -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div>
-          <label class="field-label">Travel Date</label>
+          <label class="field-label" id="lbl-travel-date">Travel Date</label>
           <input type="date" id="f-date" required style="margin-bottom:0" />
         </div>
         <div>
-          <label class="field-label">Pickup Time</label>
+          <label class="field-label" id="lbl-pickup-time">Pickup Time</label>
           <input type="time" id="f-time" required style="margin-bottom:0" />
         </div>
       </div>
 
       <select id="f-vehicle" style="margin-bottom:10px"></select>
       <textarea id="f-note" placeholder="Any notes or requirements (optional)" style="margin-bottom:10px"></textarea>
-      <button type="submit" class="submit-btn">Preview &amp; Confirm Request →</button>
+      <button type="submit" class="submit-btn" id="lbl-preview-btn">Preview &amp; Confirm Request →</button>
     </form>
   </div>
 
-  <!-- Confirmation panel -->
   <div id="booking-confirm" style="display:none">
     <div id="confirm-details"></div>
     <div class="confirm-fare-box">
-      <div class="cfl">💰 Estimated Fare</div>
+      <div class="cfl" id="lbl-confirm-fare">💰 Estimated Fare</div>
       <div class="cfa" id="confirm-fare-amount">—</div>
       <div class="cfs" id="confirm-fare-sub"></div>
-      <div class="cfn">
-        ⚠️ <strong>Final fare = actual km run × rate + driver fee.</strong><br/>
-        This is an estimate only. Toll fees (if any) to be paid by customer.
-      </div>
+      <div class="cfn" id="lbl-cfn">⚠️ Final fare = actual km run × rate + driver fee. This is an estimate only. Toll fees (if any) paid by customer.</div>
     </div>
-    <button class="submit-btn" style="background:var(--wa);box-shadow:0 4px 16px rgba(37,211,102,0.35);border:none" onclick="doSendWhatsApp()">
+    <button class="submit-btn" id="lbl-confirm-send" style="background:var(--wa);box-shadow:0 4px 16px rgba(37,211,102,0.35);border:none" onclick="doSendWhatsApp()">
       ✅ Confirm &amp; Send to WhatsApp
     </button>
-    <button class="edit-back-btn" onclick="editBooking()">← Edit Details</button>
+    <button class="edit-back-btn" id="lbl-edit-back" onclick="editBooking()">← Edit Details</button>
     <div class="call-note">
       <span style="flex-shrink:0">📞</span>
-      <span>If no call within <strong>3 minutes</strong>, please don't hesitate to call us directly — we're always ready to help!</span>
+      <span id="lbl-call-note">If no call within <strong>3 minutes</strong>, please don't hesitate to call us directly — we're always ready to help!</span>
     </div>
   </div>
 </div>
 
-<div class="footer-note">
+<div class="footer-note" id="lbl-footer">
   Powered by OpenStreetMap · OSRM · Photon · All free &amp; open source<br/>
   Fare is an estimate. Final fare based on actual km run.
 </div>
 
 <!-- Bottom Navigation -->
 <nav class="bottom-nav" id="bottom-nav">
-  <div class="nav-handle" id="nav-handle" onclick="toggleNav()"><span>▼</span> Hide Nav</div>
-  <button class="nav-item" onclick="navHome()"><span class="n-icon">🏠</span>Home</button>
-  <button class="nav-item" id="nav-cars" onclick="toggleSheet('cars-sheet','nav-cars')"><span class="n-icon">🚗</span>Cars</button>
-  <button class="nav-item" onclick="navContact()"><span class="n-icon">📞</span>Contact</button>
-  <button class="nav-item" id="nav-more" onclick="toggleSheet('more-sheet','nav-more')"><span class="n-icon">⋯</span>More</button>
+  <div class="nav-handle" id="nav-handle" onclick="toggleNav()"><span>▼</span> <span id="lbl-hide-nav">Hide Nav</span></div>
+  <button class="nav-item" onclick="navHome()"><span class="n-icon">🏠</span><span id="lbl-nav-home">Home</span></button>
+  <button class="nav-item" id="nav-cars" onclick="toggleSheet('cars-sheet','nav-cars')"><span class="n-icon">🚗</span><span id="lbl-nav-cars">Cars</span></button>
+  <button class="nav-item" onclick="navContact()"><span class="n-icon">📞</span><span id="lbl-nav-contact">Contact</span></button>
+  <button class="nav-item" id="nav-more" onclick="toggleSheet('more-sheet','nav-more')"><span class="n-icon">⋯</span><span id="lbl-nav-more">More</span></button>
 </nav>
 
 <!-- Cars Sheet -->
 <div class="sheet" id="cars-sheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">Our Vehicles &amp; Rates</div>
+  <div class="sheet-title" id="lbl-our-vehicles">Our Vehicles &amp; Rates</div>
   <div class="car-cards" id="cars-sheet-cards"></div>
 </div>
 
 <!-- More Sheet -->
 <div class="sheet" id="more-sheet">
   <div class="sheet-handle"></div>
-  <div class="sheet-title">More</div>
+  <div class="sheet-title" id="lbl-more-title">More</div>
   <ul class="more-list">
     <li><a href="#" onclick="navContact();closeAllSheets();return false;">
       <span class="ml-icon">📞</span>
-      <div><div class="ml-text">Contact Us</div><div class="ml-sub">Book via WhatsApp or call</div></div>
+      <div><div class="ml-text" id="lbl-more-contact">Contact Us</div><div class="ml-sub" id="lbl-more-contact-sub">Book via WhatsApp or call</div></div>
     </a></li>
     <li><a href="#">
       <span class="ml-icon">ℹ️</span>
-      <div><div class="ml-text">About</div><div class="ml-sub">Ahamed Cabs · Tamil Nadu &amp; Kerala</div></div>
+      <div><div class="ml-text" id="lbl-more-about">About</div><div class="ml-sub" id="lbl-more-about-sub">Ahamed Cabs · Tamil Nadu &amp; Kerala</div></div>
     </a></li>
   </ul>
 </div>
 
-<!-- Overlay -->
 <div class="overlay" id="overlay" onclick="closeAllSheets()"></div>
 
 <!-- Map Picker Modal -->
 <div class="map-picker-modal" id="map-picker-modal">
   <div class="picker-header">
-    <span class="picker-header-title">📍 Pick Location on Map</span>
+    <span class="picker-header-title" id="lbl-picker-title">📍 Pick Location on Map</span>
     <button class="picker-close" onclick="closeMapPicker()">✕</button>
   </div>
   <div class="picker-map-wrap">
@@ -453,9 +377,9 @@
     <div class="picker-pin">📍</div>
   </div>
   <div class="picker-footer">
-    <div class="picker-loc-name" id="picker-loc-name">Move map to select location…</div>
+    <div class="picker-loc-name" id="picker-loc-name">Move the map to select location…</div>
     <div class="picker-loc-sub" id="picker-loc-sub"></div>
-    <button class="picker-confirm-btn" onclick="confirmPickerLocation()">✓ Use This Location</button>
+    <button class="picker-confirm-btn" id="lbl-picker-confirm" onclick="confirmPickerLocation()">✓ Use This Location</button>
   </div>
 </div>
 
@@ -466,16 +390,18 @@
 // ══════════════════════════════════════════════════════════════════════
 const CONFIG = {
   phone:    '919952843600',   // Call number  → 91 + 10-digit mobile (no + or spaces)
-  whatsapp: '919952843600',   // WhatsApp no  → 91 + 10-digit mobile (no + or spaces)
+  whatsapp: '919952843600',   // WhatsApp no  → same format
 
   vehicles: [
     {
-      id: 'sedan4', name: 'Sedan 4+1', desc: '4 Passenger + 1 Driver', icon: '🚗',
+      id: 'sedan4', name: 'Sedan 4+1', icon: '🚗',
+      desc_en: '4 Passenger + 1 Driver', desc_ta: '4 பயணி + 1 ஓட்டுனர்',
       oneWay:    { perKm: 14, driverFee: 300, minKm: 130 },
       roundTrip: { perKm: 13, driverFee: 300, minKm: 130 },
     },
     {
-      id: 'suv6',   name: 'SUV 6+1',   desc: '6 Passenger + 1 Driver', icon: '🚙',
+      id: 'suv6', name: 'SUV 6+1', icon: '🚙',
+      desc_en: '6 Passenger + 1 Driver', desc_ta: '6 பயணி + 1 ஓட்டுனர்',
       oneWay:    { perKm: 19, driverFee: 400, minKm: 130 },
       roundTrip: { perKm: 18, driverFee: 500, minKm: 130 },
     },
@@ -483,6 +409,229 @@ const CONFIG = {
 };
 // ══════════════════════════════════════════════════════════════════════
 
+// ── TRANSLATIONS ───────────────────────────────────────────
+const T = {
+  en: {
+    tagline:          'One Way Drop · Mother City – Ammapatinam',
+    lbl_pickup:       'Pickup Point',
+    lbl_drop:         'Drop Point',
+    pickup_ph:        'Type or pick from map',
+    drop_ph:          'Type or pick from map',
+    lbl_trip_type:    'Trip Type',
+    btn_oneway:       '🔁 One Way',
+    btn_roundtrip:    '↩️ Round Trip',
+    lbl_select_veh:   'Select Vehicle',
+    calc_btn:         'Calculate Route & Fare →',
+    lbl_calculating:  'Calculating route…',
+    lbl_trip_summary: 'Trip Summary',
+    lbl_distance:     'Distance',
+    lbl_duration:     'Est. Time',
+    lbl_est_fare:     'Estimated Fare',
+    lbl_driver_fee:   'Driver Fee',
+    realtime_note:    '<strong>This is an estimated fare.</strong> Final fare is calculated on actual kilometres run during the trip.',
+    no_toll:          'No toll roads detected on this route',
+    toll_detected:    'Toll road(s) may be present — fees paid by customer',
+    toll_notice:      '<strong>Toll fees, if any, must be paid by the customer</strong> and are not included in the fare estimate.',
+    lbl_book_wa:      '💬 Book via WhatsApp',
+    lbl_book_call:    '📞 Book via Call',
+    lbl_book_enquire: '📞 Book or Enquire',
+    lbl_call_us:      '📱 Call us:',
+    lbl_chat_wa:      '💬 Chat on WhatsApp',
+    lbl_send_booking: 'Send Booking Request',
+    f_name_ph:        'Your Full Name',
+    f_phone_ph:       'Mobile Number',
+    lbl_f_trip_type:  'Trip Type',
+    f_from_ph:        'From (City / Area)',
+    f_to_ph:          'To (City / Area)',
+    lbl_travel_date:  'Travel Date',
+    lbl_pickup_time:  'Pickup Time',
+    f_note_ph:        'Any notes or requirements (optional)',
+    lbl_preview_btn:  'Preview & Confirm Request →',
+    lbl_confirm_fare: '💰 Estimated Fare',
+    lbl_confirm_send: '✅ Confirm & Send to WhatsApp',
+    lbl_edit_back:    '← Edit Details',
+    lbl_cfn:          '⚠️ Final fare = actual km run × rate + driver fee. This is an estimate only. Toll fees (if any) paid by customer.',
+    call_note:        'If no call within <strong>3 minutes</strong>, please don\'t hesitate to call us directly — we\'re always ready to help!',
+    lbl_our_vehicles: 'Our Vehicles & Rates',
+    lbl_more_title:   'More',
+    lbl_more_contact: 'Contact Us',
+    lbl_more_contact_sub: 'Book via WhatsApp or call',
+    lbl_more_about:   'About',
+    lbl_more_about_sub: 'Ahamed Cabs · Tamil Nadu & Kerala',
+    lbl_nav_home:     'Home',
+    lbl_nav_cars:     'Cars',
+    lbl_nav_contact:  'Contact',
+    lbl_nav_more:     'More',
+    lbl_hide_nav:     'Hide Nav',
+    lbl_show_nav:     'Show Nav',
+    lbl_picker_title: '📍 Pick Location on Map',
+    picker_move:      'Move the map to select location…',
+    picker_locating:  'Locating…',
+    lbl_picker_confirm: '✓ Use This Location',
+    footer:           'Powered by OpenStreetMap · OSRM · Photon · All free & open source\nFare is an estimate. Final fare based on actual km run.',
+    km:               'km',
+    trip_oneway:      'One Way',
+    trip_roundtrip:   'Round Trip',
+    min_km_note:      (min) => `Min ${min} km billing applied`,
+    veh_rate:         (perKm, driverFee) => `₹${perKm}/km + ₹${driverFee} driver`,
+    lang_switch:      'தமிழ்',
+  },
+  ta: {
+    tagline:          'ஒரு வழி பயணம் · தாய் நகரம் – அம்மாபட்டினம்',
+    lbl_pickup:       'புறப்படும் இடம்',
+    lbl_drop:         'போகும் இடம்',
+    pickup_ph:        'தட்டவும் அல்லது வரைபடத்தில் தேர்வு',
+    drop_ph:          'தட்டவும் அல்லது வரைபடத்தில் தேர்வு',
+    lbl_trip_type:    'பயண வகை',
+    btn_oneway:       '🔁 ஒரு வழி',
+    btn_roundtrip:    '↩️ இரு வழி',
+    lbl_select_veh:   'வாகனம் தேர்வு',
+    calc_btn:         'தூரம் & கட்டணம் கணக்கிடு →',
+    lbl_calculating:  'கணக்கிடுகிறோம்…',
+    lbl_trip_summary: 'பயண சுருக்கம்',
+    lbl_distance:     'தூரம்',
+    lbl_duration:     'மதிப்பீட்டு நேரம்',
+    lbl_est_fare:     'மதிப்பீட்டு கட்டணம்',
+    lbl_driver_fee:   'ஓட்டுனர் கட்டணம்',
+    realtime_note:    '<strong>இது ஒரு மதிப்பீட்டு கட்டணம்.</strong> இறுதி கட்டணம் பயணத்தில் கடந்த உண்மையான கிலோமீட்டர் அடிப்படையில் கணக்கிடப்படும்.',
+    no_toll:          'இந்த பாதையில் சுங்க சாலை இல்லை',
+    toll_detected:    'சுங்க சாலை இருக்கலாம் — கட்டணம் பயணி செலுத்த வேண்டும்',
+    toll_notice:      '<strong>சுங்க கட்டணம் ஏதேனும் இருந்தால் பயணி செலுத்த வேண்டும்</strong> — மேற்கண்ட கட்டண மதிப்பீட்டில் இது சேர்க்கப்படவில்லை.',
+    lbl_book_wa:      '💬 WhatsApp மூலம் பதிவு',
+    lbl_book_call:    '📞 அழைப்பு மூலம் பதிவு',
+    lbl_book_enquire: '📞 முன்பதிவு / விசாரணை',
+    lbl_call_us:      '📱 அழைக்கவும்:',
+    lbl_chat_wa:      '💬 WhatsApp-ல் பேசவும்',
+    lbl_send_booking: 'முன்பதிவு கோரிக்கை',
+    f_name_ph:        'உங்கள் முழு பெயர்',
+    f_phone_ph:       'கைப்பேசி எண்',
+    lbl_f_trip_type:  'பயண வகை',
+    f_from_ph:        'புறப்படும் நகரம் / பகுதி',
+    f_to_ph:          'போகும் நகரம் / பகுதி',
+    lbl_travel_date:  'பயண தேதி',
+    lbl_pickup_time:  'புறப்படும் நேரம்',
+    f_note_ph:        'குறிப்புகள் (விருப்பமானது)',
+    lbl_preview_btn:  'முன்னோட்டம் & உறுதிப்படுத்தல் →',
+    lbl_confirm_fare: '💰 மதிப்பீட்டு கட்டணம்',
+    lbl_confirm_send: '✅ உறுதிப்படுத்தி WhatsApp-ல் அனுப்பு',
+    lbl_edit_back:    '← திரும்பி திருத்து',
+    lbl_cfn:          '⚠️ இறுதி கட்டணம் = உண்மை கி.மீ × விகிதம் + ஓட்டுனர் கட்டணம். இது மட்டும் ஒரு மதிப்பீடு. சுங்க கட்டணம் பயணி செலுத்த வேண்டும்.',
+    call_note:        '<strong>3 நிமிடத்தில்</strong> அழைப்பு வரவில்லை எனில், நேரடியாக எங்களை அழைக்கவும் — நாங்கள் எப்போதும் உதவ தயாராக உள்ளோம்!',
+    lbl_our_vehicles: 'எங்கள் வாகனங்கள் & கட்டணங்கள்',
+    lbl_more_title:   'மேலும்',
+    lbl_more_contact: 'தொடர்பு கொள்ளவும்',
+    lbl_more_contact_sub: 'WhatsApp அல்லது அழைப்பு மூலம் பதிவு',
+    lbl_more_about:   'பற்றி',
+    lbl_more_about_sub: 'அஹமட் கேப்ஸ் · தமிழ்நாடு & கேரளா',
+    lbl_nav_home:     'முகப்பு',
+    lbl_nav_cars:     'வாகனங்கள்',
+    lbl_nav_contact:  'தொடர்பு',
+    lbl_nav_more:     'மேலும்',
+    lbl_hide_nav:     'மறை',
+    lbl_show_nav:     'காட்டு',
+    lbl_picker_title: '📍 வரைபடத்தில் இடம் தேர்வு',
+    picker_move:      'இடத்தை தேர்வு செய்ய வரைபடத்தை நகர்த்தவும்…',
+    picker_locating:  'இடம் கண்டுபிடிக்கிறோம்…',
+    lbl_picker_confirm: '✓ இந்த இடத்தை பயன்படுத்து',
+    footer:           'OpenStreetMap · OSRM · Photon ஆதரவுடன்\nகட்டணம் மட்டும் மதிப்பீடு. உண்மையான கி.மீ அடிப்படையில் இறுதி கட்டணம் தீர்மானிக்கப்படும்.',
+    km:               'கி.மீ',
+    trip_oneway:      'ஒரு வழி',
+    trip_roundtrip:   'இரு வழி',
+    min_km_note:      (min) => `குறைந்தபட்சம் ${min} கி.மீ`,
+    veh_rate:         (perKm, driverFee) => `₹${perKm}/கி.மீ + ₹${driverFee} ஓட்டுனர்`,
+    lang_switch:      'EN',
+  },
+};
+
+let lang = 'en';
+
+function t(key, ...args) {
+  const val = T[lang][key] ?? T.en[key] ?? key;
+  return typeof val === 'function' ? val(...args) : val;
+}
+
+function applyLang() {
+  const L = T[lang];
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  const setPH  = (id, txt) => { const el = document.getElementById(id); if (el) el.placeholder = txt; };
+
+  document.getElementById('tagline').textContent = L.tagline;
+  document.getElementById('lang-btn').textContent = L.lang_switch;
+
+  setText('lbl-pickup', L.lbl_pickup);
+  setText('lbl-drop',   L.lbl_drop);
+  setPH('pickup-input', L.pickup_ph);
+  setPH('drop-input',   L.drop_ph);
+  setText('lbl-trip-type',   L.lbl_trip_type);
+  document.getElementById('btn-oneway').textContent    = L.btn_oneway;
+  document.getElementById('btn-roundtrip').textContent = L.btn_roundtrip;
+  setText('lbl-select-veh',   L.lbl_select_veh);
+  setText('calc-btn',          L.calc_btn);
+  setText('lbl-calculating',   L.lbl_calculating);
+
+  setText('lbl-trip-summary', L.lbl_trip_summary);
+  setText('lbl-distance',     L.lbl_distance);
+  setText('lbl-duration',     L.lbl_duration);
+  setText('lbl-est-fare',     L.lbl_est_fare);
+  setText('lbl-driver-fee',   L.lbl_driver_fee);
+  set('lbl-realtime-note',    L.realtime_note);
+  set('lbl-toll-notice',      L.toll_notice);
+  setText('lbl-book-wa',      L.lbl_book_wa);
+  document.getElementById('result-call-btn').textContent = L.lbl_book_call;
+
+  setText('lbl-book-enquire', L.lbl_book_enquire);
+  setText('lbl-call-us',      L.lbl_call_us);
+  setText('lbl-chat-wa',      L.lbl_chat_wa);
+  setText('lbl-send-booking', L.lbl_send_booking);
+  setPH('f-name',   L.f_name_ph);
+  setPH('f-phone',  L.f_phone_ph);
+  setText('lbl-f-trip-type', L.lbl_f_trip_type);
+  document.getElementById('f-btn-oneway').textContent    = L.btn_oneway;
+  document.getElementById('f-btn-roundtrip').textContent = L.btn_roundtrip;
+  setPH('f-from', L.f_from_ph);
+  setPH('f-to',   L.f_to_ph);
+  setText('lbl-travel-date',  L.lbl_travel_date);
+  setText('lbl-pickup-time',  L.lbl_pickup_time);
+  setPH('f-note', L.f_note_ph);
+  setText('lbl-preview-btn',  L.lbl_preview_btn);
+  setText('lbl-confirm-fare', L.lbl_confirm_fare);
+  setText('lbl-confirm-send', L.lbl_confirm_send);
+  setText('lbl-edit-back',    L.lbl_edit_back);
+  setText('lbl-cfn',          L.lbl_cfn);
+  set('lbl-call-note',        L.call_note);
+
+  setText('lbl-our-vehicles',      L.lbl_our_vehicles);
+  setText('lbl-more-title',        L.lbl_more_title);
+  setText('lbl-more-contact',      L.lbl_more_contact);
+  setText('lbl-more-contact-sub',  L.lbl_more_contact_sub);
+  setText('lbl-more-about',        L.lbl_more_about);
+  setText('lbl-more-about-sub',    L.lbl_more_about_sub);
+  setText('lbl-nav-home',    L.lbl_nav_home);
+  setText('lbl-nav-cars',    L.lbl_nav_cars);
+  setText('lbl-nav-contact', L.lbl_nav_contact);
+  setText('lbl-nav-more',    L.lbl_nav_more);
+
+  setText('lbl-picker-title',   L.lbl_picker_title);
+  setText('lbl-picker-confirm', L.lbl_picker_confirm);
+  document.getElementById('lbl-footer').innerHTML = L.footer.replace('\n','<br/>');
+
+  // Update toll text if results are visible
+  const tollIcon = document.getElementById('toll-icon')?.textContent;
+  if (tollIcon === '✅') setText('toll-text', L.no_toll);
+  else if (tollIcon === '🚧') setText('toll-text', L.toll_detected);
+
+  renderVehicleButtons();
+  updateFormVehicleSelect();
+  renderCarsSheet();
+}
+
+function toggleLang() {
+  lang = lang === 'en' ? 'ta' : 'en';
+  applyLang();
+}
+
+// ── CONFIG & STATE ─────────────────────────────────────────
 let tripType        = 'oneway';
 let formTripType    = 'oneway';
 let selectedVehicle = CONFIG.vehicles[0].id;
@@ -490,29 +639,24 @@ let WHATSAPP_NUMBER = CONFIG.whatsapp;
 
 function setTripType(type) {
   tripType = type;
-  document.getElementById('btn-oneway').classList.toggle('active', type === 'oneway');
+  document.getElementById('btn-oneway').classList.toggle('active',    type === 'oneway');
   document.getElementById('btn-roundtrip').classList.toggle('active', type === 'roundtrip');
   renderVehicleButtons();
 }
-
 function setFormTripType(type) {
   formTripType = type;
-  document.getElementById('f-btn-oneway').classList.toggle('active', type === 'oneway');
+  document.getElementById('f-btn-oneway').classList.toggle('active',    type === 'oneway');
   document.getElementById('f-btn-roundtrip').classList.toggle('active', type === 'roundtrip');
   updateFormVehicleSelect();
 }
-
-function getRates(v, tt) {
-  return (tt || tripType) === 'roundtrip' ? v.roundTrip : v.oneWay;
-}
+function getRates(v, tt) { return (tt || tripType) === 'roundtrip' ? v.roundTrip : v.oneWay; }
 
 function calcFare(v, distKm, tt) {
   const r          = getRates(v, tt);
   const billableKm = Math.max(distKm, r.minKm);
   const kmCharge   = Math.round(billableKm * r.perKm);
   const total      = kmCharge + r.driverFee;
-  const minApplied = distKm < r.minKm;
-  return { total, kmCharge, billableKm, distKm, r, minApplied };
+  return { total, kmCharge, billableKm, distKm, r };
 }
 
 // ── INIT ───────────────────────────────────────────────────
@@ -532,15 +676,16 @@ function renderVehicleButtons() {
   const row = document.getElementById('vehicle-row');
   row.innerHTML = '';
   CONFIG.vehicles.forEach(v => {
-    const r = getRates(v, tripType);
+    const r    = getRates(v, tripType);
+    const desc = lang === 'ta' ? v.desc_ta : v.desc_en;
     const d = document.createElement('div');
     d.className = 'veh-btn' + (v.id === selectedVehicle ? ' active' : '');
     d.dataset.id = v.id;
     d.innerHTML =
       `<div class="veh-icon">${v.icon}</div>` +
       `<div class="veh-name">${v.name}</div>` +
-      `<div class="veh-seats">${v.desc}</div>` +
-      `<div class="veh-rate">₹${r.perKm}/km + ₹${r.driverFee} driver</div>`;
+      `<div class="veh-seats">${desc}</div>` +
+      `<div class="veh-rate">${t('veh_rate', r.perKm, r.driverFee)}</div>`;
     d.onclick = () => {
       document.querySelectorAll('.veh-btn').forEach(b => b.classList.remove('active'));
       d.classList.add('active');
@@ -553,10 +698,11 @@ function renderVehicleButtons() {
 function updateFormVehicleSelect() {
   const sel = document.getElementById('f-vehicle');
   if (!sel) return;
-  const ttLabel = formTripType === 'roundtrip' ? 'Round Trip' : 'One Way';
+  const ttLabel = t(formTripType === 'roundtrip' ? 'trip_roundtrip' : 'trip_oneway');
   sel.innerHTML = CONFIG.vehicles.map(v => {
-    const r = getRates(v, formTripType);
-    return `<option value="${v.id}">${v.icon} ${v.name} (${v.desc}) — ₹${r.perKm}/km + ₹${r.driverFee} driver [${ttLabel}]</option>`;
+    const r    = getRates(v, formTripType);
+    const desc = lang === 'ta' ? v.desc_ta : v.desc_en;
+    return `<option value="${v.id}">${v.icon} ${v.name} (${desc}) — ${t('veh_rate', r.perKm, r.driverFee)} [${ttLabel}]</option>`;
   }).join('');
 }
 
@@ -573,7 +719,7 @@ function clearInput(w) {
   if (w === 'pickup') pickupCoord = null; else dropCoord = null;
 }
 
-// ── AUTOCOMPLETE — Photon API ──────────────────────────────
+// ── AUTOCOMPLETE ───────────────────────────────────────────
 const ALLOWED_STATES = ['Tamil Nadu', 'Kerala'];
 const TK_BBOX = '74.8,8.0,80.5,13.6';
 let debounceTimers = {};
@@ -584,7 +730,6 @@ function isTNKL(feature) {
   const state = (feature.properties?.state || '');
   return ALLOWED_STATES.some(s => state.toLowerCase().includes(s.toLowerCase()));
 }
-
 function photonLabel(props) {
   const name  = props.name  || props.hamlet  || props.village || props.town || props.city || '';
   const city  = props.city  || props.town    || props.village || '';
@@ -595,7 +740,6 @@ function photonLabel(props) {
   const full  = [name || city, dist, state].filter(Boolean).join(', ');
   return { main, sub, full };
 }
-
 function setupAC(inputId, sugId, setter) {
   const inp = document.getElementById(inputId);
   const sug = document.getElementById(sugId);
@@ -607,9 +751,8 @@ function setupAC(inputId, sugId, setter) {
   });
   inp.addEventListener('blur', () => setTimeout(() => { sug.innerHTML = ''; }, 220));
 }
-
 async function fetchSug(query, sugEl, inputEl, setter) {
-  sugEl.innerHTML = `<div style="padding:10px 14px"><div class="sug-sub" style="display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"></span>Searching…</div></div>`;
+  sugEl.innerHTML = `<div style="padding:10px 14px"><div class="sug-sub" style="display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"></span>${lang==='ta'?'தேடுகிறோம்…':'Searching…'}</div></div>`;
   try {
     const d1 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15&bbox=${TK_BBOX}`)).json();
     if (inputEl.value.trim() !== query) return;
@@ -621,7 +764,7 @@ async function fetchSug(query, sugEl, inputEl, setter) {
     }
     sugEl.innerHTML = '';
     if (!results.length) {
-      sugEl.innerHTML = '<div><div class="sug-sub" style="color:#f59e0b;padding:2px 0">⚠️ Not found in Tamil Nadu / Kerala. Try a different spelling or nearby town.</div></div>';
+      sugEl.innerHTML = `<div><div class="sug-sub" style="color:#f59e0b;padding:2px 0">${lang==='ta'?'⚠️ தமிழ்நாடு / கேரளாவில் கிடைக்கவில்லை. வேறு எழுத்துப்பிழை அல்லது அருகில் உள்ள நகரத்தை முயற்சிக்கவும்.':'⚠️ Not found in Tamil Nadu / Kerala. Try a different spelling or nearby town.'}</div></div>`;
       return;
     }
     results.slice(0, 7).forEach(f => {
@@ -629,18 +772,11 @@ async function fetchSug(query, sugEl, inputEl, setter) {
       const [lon, lat] = f.geometry.coordinates;
       const d = document.createElement('div');
       d.innerHTML = `<div class="sug-main">${main}</div><div class="sug-sub">${sub}</div>`;
-      d.addEventListener('mousedown', () => {
-        inputEl.value = full;
-        setter({ lat, lon });
-        sugEl.innerHTML = '';
-      });
+      d.addEventListener('mousedown', () => { inputEl.value = full; setter({ lat, lon }); sugEl.innerHTML = ''; });
       sugEl.appendChild(d);
     });
-  } catch(e) {
-    if (inputEl.value.trim() === query) sugEl.innerHTML = '';
-  }
+  } catch(e) { if (inputEl.value.trim() === query) sugEl.innerHTML = ''; }
 }
-
 async function geocode(q) {
   try {
     const d1 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10&bbox=${TK_BBOX}`)).json();
@@ -654,7 +790,6 @@ async function geocode(q) {
     return { lat, lon };
   } catch { return null; }
 }
-
 setupAC('pickup-input', 'pickup-suggestions', c => pickupCoord = c);
 setupAC('drop-input',   'drop-suggestions',   c => dropCoord   = c);
 setupAC('f-from', 'f-from-sug', c => formPickupCoord = c);
@@ -664,27 +799,23 @@ setupAC('f-to',   'f-to-sug',   c => formDropCoord  = c);
 let pickerMap = null;
 let mapPickerTarget = null;
 let pickerGeocodeTimer = null;
-
 const mapPickerDefs = {
   'pickup': { inputId: 'pickup-input', setter: c => { pickupCoord = c; } },
   'drop':   { inputId: 'drop-input',   setter: c => { dropCoord   = c; } },
   'f-from': { inputId: 'f-from',       setter: c => { formPickupCoord = c; } },
   'f-to':   { inputId: 'f-to',         setter: c => { formDropCoord   = c; } },
 };
-
 function openMapPicker(targetKey) {
   mapPickerTarget = mapPickerDefs[targetKey];
   document.getElementById('map-picker-modal').classList.add('open');
-  document.getElementById('picker-loc-name').textContent = 'Move the map to select location…';
+  document.getElementById('picker-loc-name').textContent = t('picker_move');
   document.getElementById('picker-loc-sub').textContent  = '';
-
   if (!pickerMap) {
     setTimeout(() => {
       pickerMap = L.map('picker-map', { zoomControl: true }).setView([10.9, 78.0], 8);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         subdomains: 'abcd', maxZoom: 19
       }).addTo(pickerMap);
-
       pickerMap.on('moveend', onPickerMove);
       pickerMap.on('zoomend', onPickerMove);
     }, 80);
@@ -692,10 +823,9 @@ function openMapPicker(targetKey) {
     setTimeout(() => pickerMap.invalidateSize(), 80);
   }
 }
-
 async function onPickerMove() {
   clearTimeout(pickerGeocodeTimer);
-  document.getElementById('picker-loc-name').textContent = 'Locating…';
+  document.getElementById('picker-loc-name').textContent = t('picker_locating');
   document.getElementById('picker-loc-sub').textContent  = '';
   pickerGeocodeTimer = setTimeout(async () => {
     const c = pickerMap.getCenter();
@@ -714,18 +844,16 @@ async function onPickerMove() {
     }
   }, 400);
 }
-
 function confirmPickerLocation() {
   if (!pickerMap || !mapPickerTarget) return;
   const c     = pickerMap.getCenter();
-  const label = document.getElementById('picker-loc-name').textContent;
+  const main  = document.getElementById('picker-loc-name').textContent;
   const sub   = document.getElementById('picker-loc-sub').textContent;
-  const full  = sub ? `${label}, ${sub}` : label;
+  const full  = sub ? `${main}, ${sub}` : main;
   document.getElementById(mapPickerTarget.inputId).value = full;
   mapPickerTarget.setter({ lat: c.lat, lon: c.lng });
   closeMapPicker();
 }
-
 function closeMapPicker() {
   document.getElementById('map-picker-modal').classList.remove('open');
   mapPickerTarget = null;
@@ -733,17 +861,14 @@ function closeMapPicker() {
 
 // ── ROUTE MAP ──────────────────────────────────────────────
 let routeMap = null, routeLayer = null, pickupMarker = null, dropMarker = null;
-
 function initRouteMap() {
   if (routeMap) return;
   document.getElementById('map').style.display = 'block';
   routeMap = L.map('map').setView([11.5, 78.5], 7);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd', maxZoom: 19,
+    attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19,
   }).addTo(routeMap);
 }
-
 function makeIcon(emoji, color) {
   return L.divIcon({
     html: `<div style="background:${color};width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.25)"><span style="transform:rotate(45deg);font-size:15px">${emoji}</span></div>`,
@@ -754,24 +879,46 @@ function makeIcon(emoji, color) {
 // ── ROUTE CALCULATION ──────────────────────────────────────
 function showError(m) { const e = document.getElementById('error-msg'); e.textContent = m; e.style.display = 'block'; }
 function hideError()  { document.getElementById('error-msg').style.display = 'none'; }
-
 function hasTolls(steps) {
   return steps.some(s => ['toll','plaza','naka','expressway'].some(k => (s.name||'').toLowerCase().includes(k)));
+}
+
+// Fetch with timeout + automatic fallback OSRM server
+const OSRM_SERVERS = [
+  'https://router.project-osrm.org',
+  'https://routing.openstreetmap.de/routed-car',
+];
+async function fetchRoute(lon1, lat1, lon2, lat2, full = true) {
+  const params = full
+    ? '?overview=full&geometries=geojson&steps=true'
+    : '?overview=false';
+  const coords = `${lon1},${lat1};${lon2},${lat2}`;
+  for (const server of OSRM_SERVERS) {
+    try {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 12000);
+      const resp = await fetch(`${server}/route/v1/driving/${coords}${params}`, { signal: ctrl.signal });
+      clearTimeout(tid);
+      const data = await resp.json();
+      if (data.code === 'Ok' && data.routes?.length) return data;
+    } catch(e) { /* try next server */ }
+  }
+  return null;
 }
 
 async function calculateRoute() {
   hideError();
   if (!pickupCoord) {
     const q = document.getElementById('pickup-input').value.trim();
-    if (!q) { showError('Please enter a pickup location.'); return; }
+    if (!q) { showError(lang==='ta'?'புறப்படும் இடத்தை உள்ளிடவும்.':'Please enter a pickup location.'); return; }
     pickupCoord = await geocode(q);
-    if (!pickupCoord) { showError('Pickup not found in Tamil Nadu / Kerala. Please be more specific.'); return; }
+    if (!pickupCoord) { showError(lang==='ta'?'தமிழ்நாடு / கேரளாவில் புறப்படும் இடம் கிடைக்கவில்லை.':'Pickup not found in Tamil Nadu / Kerala. Please be more specific.'); return; }
   }
   if (!dropCoord) {
     const q = document.getElementById('drop-input').value.trim();
-    if (!q) { showError('Please enter a drop destination.'); return; }
+    if (!q) { showError(lang==='ta'?'போகும் இடத்தை உள்ளிடவும்.':'Please enter a drop destination.'); return; }
     dropCoord = await geocode(q);
-    if (!dropCoord) { showError('Drop location not found in Tamil Nadu / Kerala.'); return; }
+    if (!dropCoord) { showError(lang==='ta'?'தமிழ்நாடு / கேரளாவில் போகும் இடம் கிடைக்கவில்லை.':'Drop location not found in Tamil Nadu / Kerala.'); return; }
   }
 
   document.getElementById('spinner').style.display = 'flex';
@@ -779,10 +926,8 @@ async function calculateRoute() {
   document.getElementById('results-card').style.display = 'none';
 
   try {
-    const url  = `https://router.project-osrm.org/route/v1/driving/${pickupCoord.lon},${pickupCoord.lat};${dropCoord.lon},${dropCoord.lat}?overview=full&geometries=geojson&steps=true`;
-    const data = await (await fetch(url)).json();
-    if (data.code !== 'Ok' || !data.routes.length) throw new Error('No route found between these locations.');
-
+    const data = await fetchRoute(pickupCoord.lon, pickupCoord.lat, dropCoord.lon, dropCoord.lat, true);
+    if (!data) throw new Error(lang==='ta'?'வழி கணக்கிட இயலவில்லை. இணையம் சரியாக உள்ளதா என்று சரிபார்த்து மீண்டும் முயற்சிக்கவும்.':'Could not reach routing service. Check your internet connection and try again.');
     const route    = data.routes[0];
     const distKm   = route.distance / 1000;
     const durMin   = Math.round(route.duration / 60);
@@ -790,138 +935,119 @@ async function calculateRoute() {
     const f        = calcFare(v, distKm, tripType);
     const allSteps = route.legs.flatMap(l => l.steps);
     const tollOk   = hasTolls(allSteps);
-    const ttLabel  = tripType === 'roundtrip' ? 'Round Trip' : 'One Way';
+    const km       = t('km');
+    const ttLabel  = t(tripType === 'roundtrip' ? 'trip_roundtrip' : 'trip_oneway');
 
     initRouteMap();
     if (pickupMarker) routeMap.removeLayer(pickupMarker);
     if (dropMarker)   routeMap.removeLayer(dropMarker);
     if (routeLayer)   routeMap.removeLayer(routeLayer);
-
     pickupMarker = L.marker([pickupCoord.lat, pickupCoord.lon], { icon: makeIcon('🟢','#16a34a') }).addTo(routeMap).bindPopup('Pickup');
-    dropMarker   = L.marker([dropCoord.lat,   dropCoord.lon],   { icon: makeIcon('🔴','#dc2626') }).addTo(routeMap).bindPopup('Drop');
+    dropMarker   = L.marker([dropCoord.lat, dropCoord.lon],     { icon: makeIcon('🔴','#dc2626') }).addTo(routeMap).bindPopup('Drop');
     routeLayer   = L.geoJSON(route.geometry, { style:{ color:'#6C63FF', weight:5, opacity:0.85 } }).addTo(routeMap);
     routeMap.fitBounds(routeLayer.getBounds(), { padding:[30,30] });
 
-    document.getElementById('res-distance').textContent = distKm >= 1 ? distKm.toFixed(1)+' km' : Math.round(route.distance)+' m';
+    document.getElementById('res-distance').textContent = distKm >= 1 ? distKm.toFixed(1)+' '+km : Math.round(route.distance)+' m';
     document.getElementById('res-duration').textContent = durMin >= 60 ? Math.floor(durMin/60)+'h '+(durMin%60)+'m' : durMin+' min';
     document.getElementById('res-fare').textContent     = '₹'+f.total.toLocaleString('en-IN');
     document.getElementById('res-vehicle-name').textContent = `${v.name} · ${ttLabel}`;
     document.getElementById('res-vehicle-icon').textContent = v.icon;
-
-    const kmDetail = f.minApplied
-      ? `${f.billableKm} km × ₹${f.r.perKm}/km (actual ${distKm.toFixed(1)} km)`
-      : `${distKm.toFixed(1)} km × ₹${f.r.perKm}/km`;
-    document.getElementById('res-km-detail').textContent  = kmDetail;
-    document.getElementById('res-km-charge').textContent  = `₹${f.kmCharge.toLocaleString('en-IN')}`;
-    document.getElementById('res-driver-fee').textContent = `₹${f.r.driverFee.toLocaleString('en-IN')}`;
-
-    const minNoteEl = document.getElementById('res-min-note');
-    if (f.minApplied) {
-      minNoteEl.textContent = `⚠️ Minimum ${f.r.minKm} km billing applied — actual distance is ${distKm.toFixed(1)} km`;
-      minNoteEl.style.display = 'block';
-    } else {
-      minNoteEl.style.display = 'none';
-    }
+    document.getElementById('res-km-detail').textContent    = `${f.billableKm.toFixed(1)} ${km} × ₹${f.r.perKm}/${km}`;
+    document.getElementById('res-km-charge').textContent    = `₹${f.kmCharge.toLocaleString('en-IN')}`;
+    document.getElementById('res-driver-fee').textContent   = `₹${f.r.driverFee.toLocaleString('en-IN')}`;
 
     const tr = document.getElementById('toll-row');
     if (tollOk) {
       tr.className = 'toll-row has-toll';
       document.getElementById('toll-icon').textContent = '🚧';
-      document.getElementById('toll-text').textContent = 'Toll road(s) may be present — fees paid by customer';
+      document.getElementById('toll-text').textContent = t('toll_detected');
     } else {
       tr.className = 'toll-row no-toll';
       document.getElementById('toll-icon').textContent = '✅';
-      document.getElementById('toll-text').textContent = 'No toll roads detected on this route';
+      document.getElementById('toll-text').textContent = t('no_toll');
     }
 
     document.getElementById('results-card').style.display = 'block';
     document.getElementById('results-card').scrollIntoView({ behavior:'smooth', block:'nearest' });
-
   } catch(err) {
-    showError(err.message || 'Failed to calculate route. Please try again.');
+    const msg = (err.message && err.message !== 'Failed to fetch')
+      ? err.message
+      : (lang==='ta'
+          ? 'இணையம் இணைப்பு தோல்வியடைந்தது. இணையம் உள்ளதா என சரிபார்த்து மீண்டும் முயற்சிக்கவும்.'
+          : 'Network error — check your internet connection and try again.');
+    showError(msg);
   } finally {
     document.getElementById('spinner').style.display = 'none';
     document.getElementById('calc-btn').disabled = false;
   }
 }
 
-// ── BOOKING FORM FLOW ──────────────────────────────────────
+// ── BOOKING FORM ───────────────────────────────────────────
 let bookingData = null;
 
 async function sendBookingWhatsApp(e) {
   e.preventDefault();
-  const name   = document.getElementById('f-name').value.trim();
-  const phone  = document.getElementById('f-phone').value.trim();
-  const from   = document.getElementById('f-from').value.trim();
-  const to     = document.getElementById('f-to').value.trim();
-  const date   = document.getElementById('f-date').value;
-  const time   = document.getElementById('f-time').value;
-  const vehId  = document.getElementById('f-vehicle').value;
-  const note   = document.getElementById('f-note').value.trim();
-  const vehObj = CONFIG.vehicles.find(v => v.id === vehId) || CONFIG.vehicles[0];
-  const ttLabel = formTripType === 'roundtrip' ? 'Round Trip' : 'One Way';
-
+  const name    = document.getElementById('f-name').value.trim();
+  const phone   = document.getElementById('f-phone').value.trim();
+  const from    = document.getElementById('f-from').value.trim();
+  const to      = document.getElementById('f-to').value.trim();
+  const date    = document.getElementById('f-date').value;
+  const time    = document.getElementById('f-time').value;
+  const vehId   = document.getElementById('f-vehicle').value;
+  const note    = document.getElementById('f-note').value.trim();
+  const vehObj  = CONFIG.vehicles.find(v => v.id === vehId) || CONFIG.vehicles[0];
+  const ttLabel = t(formTripType === 'roundtrip' ? 'trip_roundtrip' : 'trip_oneway');
   let dateLabel = date;
   try { dateLabel = new Date(date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }); } catch(e) {}
-  const dtLabel = time ? `${dateLabel} at ${time}` : dateLabel;
 
-  bookingData = { name, phone, from, to, date, time, dtLabel, vehObj, note, ttLabel, formTripType };
+  bookingData = { name, phone, from, to, date, time, dateLabel, vehObj, note, ttLabel, formTripType };
 
   document.getElementById('booking-form-wrap').style.display = 'none';
   const confirm = document.getElementById('booking-confirm');
   confirm.style.display = 'block';
   confirm.scrollIntoView({ behavior:'smooth', block:'nearest' });
 
+  const L = T[lang];
   const rows = [
-    ['👤 Name',        name],
-    ['📱 Phone',       phone],
-    ['🔁 Trip Type',   ttLabel],
-    ['📍 From',        from],
-    ['📌 To',          to],
-    ['📅 Travel Date', dateLabel],
-    ['⏰ Pickup Time', time || '—'],
-    ['🚗 Vehicle',     `${vehObj.icon} ${vehObj.name}`],
+    [L.lbl_nav_home==='முகப்பு'?'👤 பெயர்':'👤 Name',          name],
+    [L.lbl_nav_home==='முகப்பு'?'📱 கைப்பேசி':'📱 Phone',       phone],
+    [L.lbl_trip_type,                                              ttLabel],
+    [L.lbl_pickup,                                                 from],
+    [L.lbl_drop,                                                   to],
+    [L.lbl_travel_date,                                            dateLabel],
+    [L.lbl_pickup_time,                                            time || '—'],
+    [lang==='ta'?'🚗 வாகனம்':'🚗 Vehicle',                       `${vehObj.icon} ${vehObj.name}`],
   ];
-  if (note) rows.push(['📝 Note', note]);
+  if (note) rows.push([lang==='ta'?'📝 குறிப்பு':'📝 Note', note]);
   document.getElementById('confirm-details').innerHTML =
     rows.map(([l, v]) => `<div class="confirm-row"><span class="cr-label">${l}</span><span class="cr-val">${v}</span></div>`).join('');
 
   const fareAmountEl = document.getElementById('confirm-fare-amount');
   const fareSubEl    = document.getElementById('confirm-fare-sub');
-  fareAmountEl.innerHTML = `<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span> Calculating…`;
+  fareAmountEl.innerHTML = `<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite"></span>`;
   fareSubEl.textContent = '';
 
-  if (formPickupCoord && formDropCoord && vehObj) {
+  if (formPickupCoord && formDropCoord) {
     try {
-      const url  = `https://router.project-osrm.org/route/v1/driving/${formPickupCoord.lon},${formPickupCoord.lat};${formDropCoord.lon},${formDropCoord.lat}?overview=false`;
-      const resp = await (await fetch(url)).json();
-      if (resp.code === 'Ok' && resp.routes.length) {
+      const resp = await fetchRoute(formPickupCoord.lon, formPickupCoord.lat, formDropCoord.lon, formDropCoord.lat, false);
+      if (resp) {
         const distKm = resp.routes[0].distance / 1000;
-        const f = calcFare(vehObj, distKm, formTripType);
+        const f      = calcFare(vehObj, distKm, formTripType);
+        const km     = t('km');
         fareAmountEl.textContent = '₹' + f.total.toLocaleString('en-IN');
-        const minNote = f.minApplied ? ` (min ${f.r.minKm} km applied)` : '';
-        fareSubEl.textContent = `${f.billableKm.toFixed(1)} km × ₹${f.r.perKm}/km + ₹${f.r.driverFee} driver${minNote}`;
+        fareSubEl.textContent    = `${f.billableKm.toFixed(1)} ${km} × ₹${f.r.perKm}/${km} + ₹${f.r.driverFee} ${lang==='ta'?'ஓட்டுனர்':'driver'}`;
         bookingData.fareText      = '₹' + f.total.toLocaleString('en-IN');
         bookingData.fareBreakdown = fareSubEl.textContent;
-        bookingData.distKm        = distKm;
-      } else {
-        fareAmountEl.textContent = 'Route unavailable';
-      }
-    } catch {
-      fareAmountEl.textContent = 'Unable to calculate';
-    }
+      } else { fareAmountEl.textContent = lang==='ta'?'வழி கிடைக்கவில்லை':'Route unavailable'; }
+    } catch { fareAmountEl.textContent = lang==='ta'?'கணக்கிட இயலவில்லை':'Unable to calculate'; }
   } else {
-    fareAmountEl.textContent = 'Select places from dropdown for fare estimate';
+    fareAmountEl.textContent = lang==='ta'?'கட்டண மதிப்பீட்டிற்கு வரைபடத்தில் இடம் தேர்வு செய்யவும்':'Select places from dropdown for fare estimate';
   }
 }
 
 function doSendWhatsApp() {
   if (!bookingData) return;
-  const { name, phone, from, to, dtLabel, vehObj, note, fareText, fareBreakdown, ttLabel } = bookingData;
-  const dateLabel = document.getElementById('f-date').value
-    ? new Date(document.getElementById('f-date').value).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })
-    : bookingData.date;
-  const time = bookingData.time;
+  const { name, phone, from, to, dateLabel, time, vehObj, note, fareText, fareBreakdown, ttLabel } = bookingData;
   const msg =
 `🚖 *Ahamed Cabs – Booking Request*
 
@@ -930,12 +1056,12 @@ function doSendWhatsApp() {
 🔁 Trip Type: ${ttLabel}
 📍 From: ${from}
 📌 To: ${to}
-📅 Travel Date: ${dateLabel}
-⏰ Pickup Time: ${time || '—'}
-🚗 Vehicle: ${vehObj.icon} ${vehObj.name} (${vehObj.desc})${fareText ? '\n💰 Est. Fare: '+fareText+'\n   ('+fareBreakdown+')' : ''}${note ? '\n📝 Note: '+note : ''}
+📅 Date: ${dateLabel}
+⏰ Time: ${time || '—'}
+🚗 Vehicle: ${vehObj.icon} ${vehObj.name} (${vehObj.desc_en})${fareText ? '\n💰 Est. Fare: '+fareText+'\n   ('+fareBreakdown+')' : ''}${note ? '\n📝 Note: '+note : ''}
 
-⚠️ Toll fees (if any) to be paid by customer
-ℹ️ Final fare will be calculated on actual km run
+⚠️ Toll fees (if any) paid by customer
+ℹ️ Final fare = actual km run × rate + driver fee
 
 _Please confirm the booking._`;
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -943,10 +1069,10 @@ _Please confirm the booking._`;
 
 function editBooking() {
   document.getElementById('booking-form-wrap').style.display = 'block';
-  document.getElementById('booking-confirm').style.display  = 'none';
+  document.getElementById('booking-confirm').style.display   = 'none';
 }
 
-// ── SHARE ROUTE TO WHATSAPP ────────────────────────────────
+// ── SHARE ROUTE ────────────────────────────────────────────
 function shareRouteWhatsApp() {
   if (!pickupCoord || !dropCoord) return;
   const pickup  = document.getElementById('pickup-input').value;
@@ -963,85 +1089,73 @@ function shareRouteWhatsApp() {
   const msg =
 `🚖 *Ahamed Cabs – Trip Details*
 
-📍 *From:* ${pickup}
-🏁 *To:* ${drop}
-🔁 *Trip:* ${vehName}
+📍 From: ${pickup}
+🏁 To: ${drop}
+🔁 ${vehName}
 
-📏 *Distance:* ${dist}
-⏱️ *Est. Time:* ${dur}
-
-💰 *Estimated Fare: ${fare}*
+📏 Distance: ${dist}
+⏱️ Est. Time: ${dur}
+💰 Estimated Fare: ${fare}
    ${kmDet} = ${kmCh}
    Driver fee = ${drvFee}
 
 🛣️ ${tollTxt}
-⚠️ *Toll fees (if any) to be paid by customer*
-ℹ️ *Final fare = actual km run × rate + driver fee*
+⚠️ Toll fees (if any) paid by customer
+ℹ️ Final fare = actual km run × rate + driver fee
 
-🗺️ *View Route:*
-${mapsUrl}
+🗺️ Route: ${mapsUrl}
 
-_To confirm booking, reply with your name & phone number._`;
+_Reply with name & phone to confirm booking._`;
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-// ── NAV HIDE TOGGLE ────────────────────────────────────────
+// ── NAV ────────────────────────────────────────────────────
 let navHidden = false;
 function toggleNav() {
   navHidden = !navHidden;
   document.getElementById('bottom-nav').classList.toggle('nav-hidden', navHidden);
   document.getElementById('nav-handle').innerHTML =
-    `<span>${navHidden ? '▲' : '▼'}</span> ${navHidden ? 'Show Nav' : 'Hide Nav'}`;
+    `<span>${navHidden?'▲':'▼'}</span> <span id="lbl-hide-nav">${navHidden ? t('lbl_show_nav') : t('lbl_hide_nav')}</span>`;
   document.body.style.paddingBottom = navHidden ? '30px' : 'calc(var(--nav-h) + 16px)';
   if (navHidden) closeAllSheets();
 }
-
-// ── BOTTOM NAV ─────────────────────────────────────────────
 let activeSheet = null;
-
 function toggleSheet(sheetId, btnId) {
-  const sheet   = document.getElementById(sheetId);
+  const sheet = document.getElementById(sheetId);
   const overlay = document.getElementById('overlay');
   if (sheetId === 'cars-sheet') renderCarsSheet();
   if (activeSheet === sheetId) {
-    sheet.classList.remove('open');
-    overlay.classList.remove('show');
-    document.getElementById(btnId).classList.remove('active');
-    activeSheet = null;
+    sheet.classList.remove('open'); overlay.classList.remove('show');
+    document.getElementById(btnId).classList.remove('active'); activeSheet = null;
   } else {
-    if (activeSheet) {
-      document.getElementById(activeSheet).classList.remove('open');
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    }
-    sheet.classList.add('open');
-    overlay.classList.add('show');
-    document.getElementById(btnId).classList.add('active');
-    activeSheet = sheetId;
+    if (activeSheet) { document.getElementById(activeSheet).classList.remove('open'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); }
+    sheet.classList.add('open'); overlay.classList.add('show');
+    document.getElementById(btnId).classList.add('active'); activeSheet = sheetId;
   }
 }
-
 function closeAllSheets() {
-  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('open'));
   document.getElementById('overlay').classList.remove('show');
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   activeSheet = null;
 }
-
 function navHome()    { closeAllSheets(); window.scrollTo({ top:0, behavior:'smooth' }); }
 function navContact() { closeAllSheets(); document.getElementById('contact-section').scrollIntoView({ behavior:'smooth' }); }
 
 function renderCarsSheet() {
   const c = document.getElementById('cars-sheet-cards');
   c.innerHTML = '';
+  const ow = t('trip_oneway'), rt = t('trip_roundtrip'), km = t('km');
   CONFIG.vehicles.forEach(v => {
+    const desc = lang === 'ta' ? v.desc_ta : v.desc_en;
     const card = document.createElement('div');
     card.className = 'car-card';
     card.innerHTML =
       `<div class="cc-icon">${v.icon}</div>` +
       `<div class="cc-name">${v.name}</div>` +
-      `<div class="cc-desc">${v.desc}</div>` +
-      `<div class="cc-price"><strong>One Way</strong><br/>₹${v.oneWay.perKm}/km + ₹${v.oneWay.driverFee} driver<br/>Min ${v.oneWay.minKm} km</div>` +
-      `<div class="cc-price-rt"><strong>Round Trip</strong><br/>₹${v.roundTrip.perKm}/km + ₹${v.roundTrip.driverFee} driver<br/>Min ${v.roundTrip.minKm} km</div>`;
+      `<div class="cc-desc">${desc}</div>` +
+      `<div class="cc-price"><strong>${ow}</strong><br/>₹${v.oneWay.perKm}/${km} + ₹${v.oneWay.driverFee} ${lang==='ta'?'ஓட்டுனர்':'driver'}<br/>${t('min_km_note',v.oneWay.minKm)}</div>` +
+      `<div class="cc-price-rt"><strong>${rt}</strong><br/>₹${v.roundTrip.perKm}/${km} + ₹${v.roundTrip.driverFee} ${lang==='ta'?'ஓட்டுனர்':'driver'}<br/>${t('min_km_note',v.roundTrip.minKm)}</div>`;
     c.appendChild(card);
   });
 }
