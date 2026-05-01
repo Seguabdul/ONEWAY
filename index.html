@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Ahamed Cabs - Ride Estimator</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCO8MD6nDmtpPAOJ-sFtd4E-fcF9ctrE9M&callback=onGMapsReady"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -226,6 +227,7 @@
         <span class="fd-label" id="lbl-driver-fee">Driver Fee</span>
         <span class="fd-val" id="res-driver-fee">—</span>
       </div>
+      <div id="res-min-note" style="display:none;margin-top:8px;background:rgba(255,255,255,0.15);border-radius:8px;padding:7px 10px;font-size:11px;line-height:1.6;"></div>
     </div>
   </div>
 
@@ -397,13 +399,13 @@ const CONFIG = {
       id: 'sedan4', name: 'Sedan 4+1', icon: '🚗',
       desc_en: '4 Passenger + 1 Driver', desc_ta: '4 பயணி + 1 ஓட்டுனர்',
       oneWay:    { perKm: 14, driverFee: 300, minKm: 130 },
-      roundTrip: { perKm: 13, driverFee: 300, minKm: 130 },
+      roundTrip: { perKm: 13, driverFee: 300, minKm: 250 },
     },
     {
       id: 'suv6', name: 'SUV 6+1', icon: '🚙',
       desc_en: '6 Passenger + 1 Driver', desc_ta: '6 பயணி + 1 ஓட்டுனர்',
       oneWay:    { perKm: 19, driverFee: 400, minKm: 130 },
-      roundTrip: { perKm: 18, driverFee: 500, minKm: 130 },
+      roundTrip: { perKm: 18, driverFee: 500, minKm: 250 },
     },
   ],
 };
@@ -652,11 +654,13 @@ function setFormTripType(type) {
 function getRates(v, tt) { return (tt || tripType) === 'roundtrip' ? v.roundTrip : v.oneWay; }
 
 function calcFare(v, distKm, tt) {
-  const r          = getRates(v, tt);
-  const billableKm = Math.max(distKm, r.minKm);
-  const kmCharge   = Math.round(billableKm * r.perKm);
-  const total      = kmCharge + r.driverFee;
-  return { total, kmCharge, billableKm, distKm, r };
+  const r           = getRates(v, tt);
+  const isRound     = tt === 'roundtrip';
+  const travelKm    = isRound ? distKm * 2 : distKm;   // double for round trip
+  const billableKm  = Math.max(travelKm, r.minKm);      // apply minimum
+  const kmCharge    = Math.round(billableKm * r.perKm);
+  const total       = kmCharge + r.driverFee;
+  return { total, kmCharge, billableKm, travelKm, distKm, isRound, r };
 }
 
 // ── INIT ───────────────────────────────────────────────────
@@ -879,31 +883,29 @@ function makeIcon(emoji, color) {
 // ── ROUTE CALCULATION ──────────────────────────────────────
 function showError(m) { const e = document.getElementById('error-msg'); e.textContent = m; e.style.display = 'block'; }
 function hideError()  { document.getElementById('error-msg').style.display = 'none'; }
+function showRoutingError() {
+  showError(lang==='ta'
+    ? 'வழி சேவை இப்போது இல்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.'
+    : 'Routing service is temporarily unavailable. Please try again in a moment.');
+}
 function hasTolls(steps) {
   return steps.some(s => ['toll','plaza','naka','expressway'].some(k => (s.name||'').toLowerCase().includes(k)));
 }
 
-// Fetch with timeout + automatic fallback OSRM server
-const OSRM_SERVERS = [
-  'https://router.project-osrm.org',
-  'https://routing.openstreetmap.de/routed-car',
-];
-async function fetchRoute(lon1, lat1, lon2, lat2, full = true) {
-  const params = full
-    ? '?overview=full&geometries=geojson&steps=true'
-    : '?overview=false';
-  const coords = `${lon1},${lat1};${lon2},${lat2}`;
-  for (const server of OSRM_SERVERS) {
-    try {
-      const ctrl = new AbortController();
-      const tid  = setTimeout(() => ctrl.abort(), 12000);
-      const resp = await fetch(`${server}/route/v1/driving/${coords}${params}`, { signal: ctrl.signal });
-      clearTimeout(tid);
-      const data = await resp.json();
-      if (data.code === 'Ok' && data.routes?.length) return data;
-    } catch(e) { /* try next server */ }
-  }
-  return null;
+// ── GOOGLE MAPS DIRECTIONS ─────────────────────────────────
+let gDirections = null;
+window.onGMapsReady = () => { gDirections = new google.maps.DirectionsService(); };
+
+function fetchRoute(origin, destination) {
+  return new Promise(resolve => {
+    if (!gDirections) { resolve(null); return; }
+    gDirections.route({
+      origin:      new google.maps.LatLng(origin.lat, origin.lon),
+      destination: new google.maps.LatLng(destination.lat, destination.lon),
+      travelMode:  google.maps.TravelMode.DRIVING,
+      region:      'IN',
+    }, (result, status) => resolve(status === 'OK' ? result : null));
+  });
 }
 
 async function calculateRoute() {
@@ -926,35 +928,59 @@ async function calculateRoute() {
   document.getElementById('results-card').style.display = 'none';
 
   try {
-    const data = await fetchRoute(pickupCoord.lon, pickupCoord.lat, dropCoord.lon, dropCoord.lat, true);
-    if (!data) throw new Error(lang==='ta'?'வழி கணக்கிட இயலவில்லை. இணையம் சரியாக உள்ளதா என்று சரிபார்த்து மீண்டும் முயற்சிக்கவும்.':'Could not reach routing service. Check your internet connection and try again.');
-    const route    = data.routes[0];
-    const distKm   = route.distance / 1000;
-    const durMin   = Math.round(route.duration / 60);
-    const v        = CONFIG.vehicles.find(x => x.id === selectedVehicle) || CONFIG.vehicles[0];
-    const f        = calcFare(v, distKm, tripType);
-    const allSteps = route.legs.flatMap(l => l.steps);
-    const tollOk   = hasTolls(allSteps);
-    const km       = t('km');
-    const ttLabel  = t(tripType === 'roundtrip' ? 'trip_roundtrip' : 'trip_oneway');
+    const result  = await fetchRoute(pickupCoord, dropCoord);
+    const km      = t('km');
+    const ttLabel = t(tripType === 'roundtrip' ? 'trip_roundtrip' : 'trip_oneway');
+    const v       = CONFIG.vehicles.find(x => x.id === selectedVehicle) || CONFIG.vehicles[0];
+
+    if (!result) { showRoutingError(); return; }
+
+    const leg    = result.routes[0].legs[0];
+    const distKm = leg.distance.value / 1000;
+    const durMin = Math.round(leg.duration.value / 60);
+    const f      = calcFare(v, distKm, tripType);
+    // Toll detection from Google warnings + step instructions
+    const warnings = (result.routes[0].warnings || []).join(' ').toLowerCase();
+    const tollOk   = warnings.includes('toll') ||
+      leg.steps.some(s => ['toll','plaza','naka','expressway'].some(k => (s.instructions||'').toLowerCase().includes(k)));
+    // Decode path for Leaflet from Google overview_path
+    const path   = result.routes[0].overview_path.map(p => [p.lat(), p.lng()]);
 
     initRouteMap();
     if (pickupMarker) routeMap.removeLayer(pickupMarker);
     if (dropMarker)   routeMap.removeLayer(dropMarker);
     if (routeLayer)   routeMap.removeLayer(routeLayer);
     pickupMarker = L.marker([pickupCoord.lat, pickupCoord.lon], { icon: makeIcon('🟢','#16a34a') }).addTo(routeMap).bindPopup('Pickup');
-    dropMarker   = L.marker([dropCoord.lat, dropCoord.lon],     { icon: makeIcon('🔴','#dc2626') }).addTo(routeMap).bindPopup('Drop');
-    routeLayer   = L.geoJSON(route.geometry, { style:{ color:'#6C63FF', weight:5, opacity:0.85 } }).addTo(routeMap);
+    dropMarker   = L.marker([dropCoord.lat,   dropCoord.lon],   { icon: makeIcon('🔴','#dc2626') }).addTo(routeMap).bindPopup('Drop');
+    routeLayer   = L.polyline(path, { color:'#6C63FF', weight:5, opacity:0.85 }).addTo(routeMap);
     routeMap.fitBounds(routeLayer.getBounds(), { padding:[30,30] });
 
-    document.getElementById('res-distance').textContent = distKm >= 1 ? distKm.toFixed(1)+' '+km : Math.round(route.distance)+' m';
-    document.getElementById('res-duration').textContent = durMin >= 60 ? Math.floor(durMin/60)+'h '+(durMin%60)+'m' : durMin+' min';
-    document.getElementById('res-fare').textContent     = '₹'+f.total.toLocaleString('en-IN');
+    document.getElementById('res-distance').textContent    = distKm.toFixed(1) + ' ' + km;
+    document.getElementById('res-duration').textContent    = durMin >= 60 ? Math.floor(durMin/60)+'h '+(durMin%60)+'m' : durMin+' min';
+    document.getElementById('res-fare').textContent        = '₹' + f.total.toLocaleString('en-IN');
     document.getElementById('res-vehicle-name').textContent = `${v.name} · ${ttLabel}`;
     document.getElementById('res-vehicle-icon').textContent = v.icon;
-    document.getElementById('res-km-detail').textContent    = `${f.billableKm.toFixed(1)} ${km} × ₹${f.r.perKm}/${km}`;
-    document.getElementById('res-km-charge').textContent    = `₹${f.kmCharge.toLocaleString('en-IN')}`;
-    document.getElementById('res-driver-fee').textContent   = `₹${f.r.driverFee.toLocaleString('en-IN')}`;
+    const minApplied = f.billableKm > f.travelKm;
+    // Always show the actual billable km in the rate row (what is charged)
+    document.getElementById('res-km-detail').textContent  = `${f.billableKm.toFixed(1)} ${km} × ₹${f.r.perKm}/${km}`;
+    document.getElementById('res-km-charge').textContent  = `₹${f.kmCharge.toLocaleString('en-IN')}`;
+    document.getElementById('res-driver-fee').textContent = `₹${f.r.driverFee.toLocaleString('en-IN')}`;
+
+    // Minimum km note
+    const minNoteEl = document.getElementById('res-min-note');
+    if (minApplied) {
+      const actualLabel = f.isRound
+        ? `${f.distKm.toFixed(1)} ${km} × 2 = ${f.travelKm.toFixed(1)} ${km}`
+        : `${f.travelKm.toFixed(1)} ${km}`;
+      minNoteEl.innerHTML = lang === 'ta'
+        ? `⚠️ உண்மையான தூரம் ${actualLabel} — குறைந்தபட்ச ${f.r.minKm} ${km}-க்கும் குறைவு. எனவே குறைந்தபட்ச ${f.r.minKm} ${km} கணக்கீடு பயன்படுத்தப்படுகிறது.`
+        : `⚠️ Actual distance is ${actualLabel}, which is less than the minimum ${f.r.minKm} ${km}. Minimum ${f.r.minKm} ${km} billing is applied.`;
+      minNoteEl.style.display = 'block';
+    } else {
+      minNoteEl.style.display = 'none';
+    }
+
+    document.getElementById('lbl-realtime-note').innerHTML = T[lang].realtime_note;
 
     const tr = document.getElementById('toll-row');
     if (tollOk) {
@@ -970,11 +996,6 @@ async function calculateRoute() {
     document.getElementById('results-card').style.display = 'block';
     document.getElementById('results-card').scrollIntoView({ behavior:'smooth', block:'nearest' });
   } catch(err) {
-    const msg = (err.message && err.message !== 'Failed to fetch')
-      ? err.message
-      : (lang==='ta'
-          ? 'இணையம் இணைப்பு தோல்வியடைந்தது. இணையம் உள்ளதா என சரிபார்த்து மீண்டும் முயற்சிக்கவும்.'
-          : 'Network error — check your internet connection and try again.');
     showError(msg);
   } finally {
     document.getElementById('spinner').style.display = 'none';
@@ -1029,19 +1050,25 @@ async function sendBookingWhatsApp(e) {
 
   if (formPickupCoord && formDropCoord) {
     try {
-      const resp = await fetchRoute(formPickupCoord.lon, formPickupCoord.lat, formDropCoord.lon, formDropCoord.lat, false);
+      const km   = t('km');
+      const resp = await fetchRoute(formPickupCoord, formDropCoord);
       if (resp) {
-        const distKm = resp.routes[0].distance / 1000;
+        const distKm = resp.routes[0].legs[0].distance.value / 1000;
         const f      = calcFare(vehObj, distKm, formTripType);
-        const km     = t('km');
-        fareAmountEl.textContent = '₹' + f.total.toLocaleString('en-IN');
-        fareSubEl.textContent    = `${f.billableKm.toFixed(1)} ${km} × ₹${f.r.perKm}/${km} + ₹${f.r.driverFee} ${lang==='ta'?'ஓட்டுனர்':'driver'}`;
+        fareAmountEl.textContent  = '₹' + f.total.toLocaleString('en-IN');
+        const fMinApplied = f.billableKm > f.travelKm;
+        const fActual = f.isRound
+          ? `${f.distKm.toFixed(1)} ${km} × 2 = ${f.travelKm.toFixed(1)} ${km}`
+          : `${f.travelKm.toFixed(1)} ${km}`;
+        fareSubEl.textContent = `${f.billableKm.toFixed(1)} ${km} × ₹${f.r.perKm}/${km} + ₹${f.r.driverFee} ${lang==='ta'?'ஓட்டுனர்':'driver'}${fMinApplied ? (lang==='ta'?` (உண்மை: ${fActual}, குறைந்தபட்சம் ${f.r.minKm} ${km})`:` (actual: ${fActual}, min ${f.r.minKm} ${km} applied)`) : ''}`;
         bookingData.fareText      = '₹' + f.total.toLocaleString('en-IN');
         bookingData.fareBreakdown = fareSubEl.textContent;
-      } else { fareAmountEl.textContent = lang==='ta'?'வழி கிடைக்கவில்லை':'Route unavailable'; }
+      } else {
+        fareAmountEl.textContent = lang==='ta' ? 'வழி சேவை இல்லை — மீண்டும் முயற்சிக்கவும்' : 'Routing unavailable — try again';
+      }
     } catch { fareAmountEl.textContent = lang==='ta'?'கணக்கிட இயலவில்லை':'Unable to calculate'; }
   } else {
-    fareAmountEl.textContent = lang==='ta'?'கட்டண மதிப்பீட்டிற்கு வரைபடத்தில் இடம் தேர்வு செய்யவும்':'Select places from dropdown for fare estimate';
+    fareAmountEl.textContent = lang==='ta'?'கட்டண மதிப்பீட்டிற்கு இடம் தேர்வு செய்யவும்':'Select pickup & drop for fare estimate';
   }
 }
 
