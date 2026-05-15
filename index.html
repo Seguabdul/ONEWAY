@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Ahamed Cabs - Ride Estimator</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -106,7 +105,9 @@
     .picker-close { border: none; background: none; font-size: 26px; cursor: pointer; color: var(--muted); line-height: 1; }
     .picker-map-wrap { flex: 1; position: relative; min-height: 0; }
     #picker-map { width: 100%; height: 100%; }
-    .picker-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); font-size: 36px; pointer-events: none; z-index: 1000; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45)); }
+    .picker-pin { position: absolute; top: 50%; left: 50%; width: 32px; height: 44px; transform: translate(-50%, -100%); pointer-events: none; z-index: 1000; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.45)); }
+    .picker-pin svg { width: 100%; height: 100%; display: block; }
+    .picker-pin::after { content: ''; position: absolute; left: 50%; bottom: -3px; width: 6px; height: 6px; background: rgba(0,0,0,0.35); border-radius: 50%; transform: translateX(-50%); filter: blur(1px); }
     .picker-footer { background: var(--surface); padding: 12px 16px 16px; border-top: 1px solid var(--border); flex-shrink: 0; }
     .picker-loc-name { font-size: 13px; color: var(--text); margin-bottom: 4px; min-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
     .picker-loc-sub { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
@@ -136,7 +137,7 @@
     .ml-sub { font-size: 12px; color: var(--muted); }
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9997; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
     .overlay.show { opacity: 1; pointer-events: all; }
-    .leaflet-routing-container { display: none !important; }
+    .gm-style-iw button { display: none !important; }
   </style>
 </head>
 <body>
@@ -329,7 +330,7 @@
 </div>
 
 <div class="footer-note" id="lbl-footer">
-  Powered by OpenStreetMap · OSRM · Photon · All free &amp; open source<br/>
+  Powered by Google Maps<br/>
   Fare is an estimate. Final fare based on actual km run.
 </div>
 
@@ -375,7 +376,12 @@
   </div>
   <div class="picker-map-wrap">
     <div id="picker-map"></div>
-    <div class="picker-pin">📍</div>
+    <div class="picker-pin" aria-hidden="true">
+      <svg viewBox="0 0 24 33" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.4 0 0 5.4 0 12c0 8.4 12 21 12 21s12-12.6 12-21C24 5.4 18.6 0 12 0z" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="12" cy="12" r="4.2" fill="#fff"/>
+      </svg>
+    </div>
   </div>
   <div class="picker-footer">
     <div class="picker-loc-name" id="picker-loc-name">Move the map to select location…</div>
@@ -384,7 +390,6 @@
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ══════════════════════════════════════════════════════════════════════
 //  AHAMED CABS — EDIT THIS BLOCK TO UPDATE PRICING & CONTACT DETAILS
@@ -469,7 +474,7 @@ const T = {
     picker_move:      'Move the map to select location…',
     picker_locating:  'Locating…',
     lbl_picker_confirm: '✓ Use This Location',
-    footer:           'Powered by OpenStreetMap · OSRM · Photon · All free & open source\nFare is an estimate. Final fare based on actual km run.',
+    footer:           'Powered by Google Maps\nFare is an estimate. Final fare based on actual km run.',
     km:               'km',
     trip_oneway:      'One Way',
     trip_roundtrip:   'Round Trip',
@@ -534,7 +539,7 @@ const T = {
     picker_move:      'இடத்தை தேர்வு செய்ய வரைபடத்தை நகர்த்தவும்…',
     picker_locating:  'இடம் கண்டுபிடிக்கிறோம்…',
     lbl_picker_confirm: '✓ இந்த இடத்தை பயன்படுத்து',
-    footer:           'OpenStreetMap · OSRM · Photon ஆதரவுடன்\nகட்டணம் மட்டும் மதிப்பீடு. உண்மையான கி.மீ அடிப்படையில் இறுதி கட்டணம் தீர்மானிக்கப்படும்.',
+    footer:           'Google Maps ஆதரவுடன்\nகட்டணம் மட்டும் மதிப்பீடு. உண்மையான கி.மீ அடிப்படையில் இறுதி கட்டணம் தீர்மானிக்கப்படும்.',
     km:               'கி.மீ',
     trip_oneway:      'ஒரு வழி',
     trip_roundtrip:   'இரு வழி',
@@ -724,24 +729,21 @@ function clearInput(w) {
 
 // ── AUTOCOMPLETE ───────────────────────────────────────────
 const ALLOWED_STATES = ['Tamil Nadu', 'Kerala'];
-const TK_BBOX = '74.8,8.0,80.5,13.6';
 let debounceTimers = {};
 let pickupCoord = null, dropCoord = null;
 let formPickupCoord = null, formDropCoord = null;
 
-function isTNKL(feature) {
-  const state = (feature.properties?.state || '');
-  return ALLOWED_STATES.some(s => state.toLowerCase().includes(s.toLowerCase()));
+function isAddressInTNKL(addressComponents) {
+  return (addressComponents || []).some(c =>
+    c.types && c.types.includes('administrative_area_level_1') &&
+    ALLOWED_STATES.some(s => (c.long_name || '').toLowerCase().includes(s.toLowerCase()))
+  );
 }
-function photonLabel(props) {
-  const name  = props.name  || props.hamlet  || props.village || props.town || props.city || '';
-  const city  = props.city  || props.town    || props.village || '';
-  const dist  = props.county || props.district || '';
-  const state = props.state || '';
-  const main  = (name && city && name !== city) ? `${name}, ${city}` : (name || city);
-  const sub   = [dist, state].filter(Boolean).join(', ');
-  const full  = [name || city, dist, state].filter(Boolean).join(', ');
-  return { main, sub, full };
+function tnklBounds() {
+  return new google.maps.LatLngBounds(
+    { lat: 8.0,  lng: 74.8 },
+    { lat: 13.6, lng: 80.5 }
+  );
 }
 function setupAC(inputId, sugId, setter) {
   const inp = document.getElementById(inputId);
@@ -754,44 +756,56 @@ function setupAC(inputId, sugId, setter) {
   });
   inp.addEventListener('blur', () => setTimeout(() => { sug.innerHTML = ''; }, 220));
 }
-async function fetchSug(query, sugEl, inputEl, setter) {
+function fetchSug(query, sugEl, inputEl, setter) {
   sugEl.innerHTML = `<div style="padding:10px 14px"><div class="sug-sub" style="display:flex;align-items:center;gap:8px"><span style="display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"></span>${lang==='ta'?'தேடுகிறோம்…':'Searching…'}</div></div>`;
-  try {
-    const d1 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15&bbox=${TK_BBOX}`)).json();
+  onGoogleReady(() => {
     if (inputEl.value.trim() !== query) return;
-    let results = (d1.features || []).filter(isTNKL);
-    if (!results.length) {
-      const d2 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=15`)).json();
+    gAutocomplete.getPlacePredictions({
+      input: query,
+      componentRestrictions: { country: 'in' },
+      locationBias: tnklBounds(),
+    }, (preds, status) => {
       if (inputEl.value.trim() !== query) return;
-      results = (d2.features || []).filter(isTNKL);
-    }
-    sugEl.innerHTML = '';
-    if (!results.length) {
-      sugEl.innerHTML = `<div><div class="sug-sub" style="color:#f59e0b;padding:2px 0">${lang==='ta'?'⚠️ தமிழ்நாடு / கேரளாவில் கிடைக்கவில்லை. வேறு எழுத்துப்பிழை அல்லது அருகில் உள்ள நகரத்தை முயற்சிக்கவும்.':'⚠️ Not found in Tamil Nadu / Kerala. Try a different spelling or nearby town.'}</div></div>`;
-      return;
-    }
-    results.slice(0, 7).forEach(f => {
-      const { main, sub, full } = photonLabel(f.properties);
-      const [lon, lat] = f.geometry.coordinates;
-      const d = document.createElement('div');
-      d.innerHTML = `<div class="sug-main">${main}</div><div class="sug-sub">${sub}</div>`;
-      d.addEventListener('mousedown', () => { inputEl.value = full; setter({ lat, lon }); sugEl.innerHTML = ''; });
-      sugEl.appendChild(d);
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length) {
+        sugEl.innerHTML = `<div><div class="sug-sub" style="color:#f59e0b;padding:2px 0">${lang==='ta'?'⚠️ தமிழ்நாடு / கேரளாவில் கிடைக்கவில்லை. வேறு எழுத்துப்பிழை அல்லது அருகில் உள்ள நகரத்தை முயற்சிக்கவும்.':'⚠️ Not found in Tamil Nadu / Kerala. Try a different spelling or nearby town.'}</div></div>`;
+        return;
+      }
+      sugEl.innerHTML = '';
+      preds.slice(0, 7).forEach(p => {
+        const main = p.structured_formatting?.main_text || p.description;
+        const sub  = p.structured_formatting?.secondary_text || '';
+        const d = document.createElement('div');
+        d.innerHTML = `<div class="sug-main">${main}</div><div class="sug-sub">${sub}</div>`;
+        d.addEventListener('mousedown', () => {
+          inputEl.value = p.description;
+          sugEl.innerHTML = '';
+          gPlaces.getDetails({ placeId: p.place_id, fields: ['geometry','address_components'] }, (place, st) => {
+            if (st === google.maps.places.PlacesServiceStatus.OK && place && place.geometry && place.geometry.location) {
+              setter({ lat: place.geometry.location.lat(), lon: place.geometry.location.lng() });
+            }
+          });
+        });
+        sugEl.appendChild(d);
+      });
     });
-  } catch(e) { if (inputEl.value.trim() === query) sugEl.innerHTML = ''; }
+  });
 }
-async function geocode(q) {
-  try {
-    const d1 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10&bbox=${TK_BBOX}`)).json();
-    let hit = (d1.features || []).find(isTNKL);
-    if (!hit) {
-      const d2 = await (await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=10`)).json();
-      hit = (d2.features || []).find(isTNKL);
-    }
-    if (!hit) return null;
-    const [lon, lat] = hit.geometry.coordinates;
-    return { lat, lon };
-  } catch { return null; }
+function geocode(q) {
+  return new Promise(resolve => {
+    onGoogleReady(() => {
+      gGeocoder.geocode({
+        address: q,
+        componentRestrictions: { country: 'IN' },
+        bounds: tnklBounds(),
+      }, (results, status) => {
+        if (status !== 'OK' || !results || !results.length) { resolve(null); return; }
+        const hit = results.find(r => isAddressInTNKL(r.address_components)) || results[0];
+        if (!isAddressInTNKL(hit.address_components)) { resolve(null); return; }
+        const loc = hit.geometry.location;
+        resolve({ lat: loc.lat(), lon: loc.lng() });
+      });
+    });
+  });
 }
 setupAC('pickup-input', 'pickup-suggestions', c => pickupCoord = c);
 setupAC('drop-input',   'drop-suggestions',   c => dropCoord   = c);
@@ -802,6 +816,7 @@ setupAC('f-to',   'f-to-sug',   c => formDropCoord  = c);
 let pickerMap = null;
 let mapPickerTarget = null;
 let pickerGeocodeTimer = null;
+let pickerLocatingTimer = null;
 const mapPickerDefs = {
   'pickup': { inputId: 'pickup-input', setter: c => { pickupCoord = c; } },
   'drop':   { inputId: 'drop-input',   setter: c => { dropCoord   = c; } },
@@ -814,38 +829,59 @@ function openMapPicker(targetKey) {
   document.getElementById('picker-loc-name').textContent = t('picker_move');
   document.getElementById('picker-loc-sub').textContent  = '';
   if (!pickerMap) {
-    setTimeout(() => {
-      pickerMap = L.map('picker-map', { zoomControl: true }).setView([10.9, 78.0], 8);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd', maxZoom: 19
-      }).addTo(pickerMap);
-      pickerMap.on('moveend', onPickerMove);
-      pickerMap.on('zoomend', onPickerMove);
-    }, 80);
+    onGoogleReady(() => {
+      setTimeout(() => {
+        pickerMap = new google.maps.Map(document.getElementById('picker-map'), {
+          center: { lat: 10.9, lng: 78.0 },
+          zoom: 8,
+          streetViewControl: false,
+          fullscreenControl: false,
+          mapTypeControl: false,
+          gestureHandling: 'greedy',
+          clickableIcons: false,
+          disableDoubleClickZoom: false,
+        });
+        pickerMap.addListener('dragend',      onPickerMove);
+        pickerMap.addListener('zoom_changed', onPickerMove);
+      }, 100);
+    });
   } else {
-    setTimeout(() => pickerMap.invalidateSize(), 80);
+    setTimeout(() => {
+      const c = pickerMap.getCenter();
+      google.maps.event.trigger(pickerMap, 'resize');
+      if (c) pickerMap.setCenter(c);
+    }, 100);
   }
 }
-async function onPickerMove() {
+function onPickerMove() {
   clearTimeout(pickerGeocodeTimer);
-  document.getElementById('picker-loc-name').textContent = t('picker_locating');
-  document.getElementById('picker-loc-sub').textContent  = '';
-  pickerGeocodeTimer = setTimeout(async () => {
+  clearTimeout(pickerLocatingTimer);
+  pickerLocatingTimer = setTimeout(() => {
+    document.getElementById('picker-loc-name').textContent = t('picker_locating');
+    document.getElementById('picker-loc-sub').textContent  = '';
+  }, 250);
+  pickerGeocodeTimer = setTimeout(() => {
     const c = pickerMap.getCenter();
-    try {
-      const data = await (await fetch(`https://photon.komoot.io/reverse?lat=${c.lat}&lon=${c.lng}&limit=1`)).json();
-      const feat = data.features?.[0];
-      if (feat) {
-        const { main, sub } = photonLabel(feat.properties);
-        document.getElementById('picker-loc-name').textContent = main || `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
-        document.getElementById('picker-loc-sub').textContent  = sub || '';
+    const lat = c.lat(), lng = c.lng();
+    const finish = (mainTxt, subTxt) => {
+      clearTimeout(pickerLocatingTimer);
+      document.getElementById('picker-loc-name').textContent = mainTxt;
+      document.getElementById('picker-loc-sub').textContent  = subTxt || '';
+    };
+    if (!gGeocoder) { finish(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, ''); return; }
+    gGeocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === 'OK' && results && results[0]) {
+        const r  = results[0];
+        const ac = r.address_components || [];
+        const get = (type) => ac.find(c => c.types && c.types.includes(type))?.long_name || '';
+        const main = get('sublocality_level_1') || get('sublocality') || get('locality') || get('administrative_area_level_2') || (r.formatted_address || '').split(',')[0];
+        const sub  = r.formatted_address || [get('administrative_area_level_2'), get('administrative_area_level_1')].filter(Boolean).join(', ');
+        finish(main || `${lat.toFixed(5)}, ${lng.toFixed(5)}`, sub);
       } else {
-        document.getElementById('picker-loc-name').textContent = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
+        finish(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, '');
       }
-    } catch {
-      document.getElementById('picker-loc-name').textContent = `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
-    }
-  }, 400);
+    });
+  }, 350);
 }
 function confirmPickerLocation() {
   if (!pickerMap || !mapPickerTarget) return;
@@ -854,7 +890,7 @@ function confirmPickerLocation() {
   const sub   = document.getElementById('picker-loc-sub').textContent;
   const full  = sub ? `${main}, ${sub}` : main;
   document.getElementById(mapPickerTarget.inputId).value = full;
-  mapPickerTarget.setter({ lat: c.lat, lon: c.lng });
+  mapPickerTarget.setter({ lat: c.lat(), lon: c.lng() });
   closeMapPicker();
 }
 function closeMapPicker() {
@@ -863,19 +899,22 @@ function closeMapPicker() {
 }
 
 // ── ROUTE MAP ──────────────────────────────────────────────
-let routeMap = null, routeLayer = null, pickupMarker = null, dropMarker = null;
+let routeMap = null, routeRenderer = null;
 function initRouteMap() {
   if (routeMap) return;
   document.getElementById('map').style.display = 'block';
-  routeMap = L.map('map').setView([11.5, 78.5], 7);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19,
-  }).addTo(routeMap);
-}
-function makeIcon(emoji, color) {
-  return L.divIcon({
-    html: `<div style="background:${color};width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.25)"><span style="transform:rotate(45deg);font-size:15px">${emoji}</span></div>`,
-    iconSize:[32,32], iconAnchor:[16,32], className:'',
+  routeMap = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 11.5, lng: 78.5 },
+    zoom: 7,
+    streetViewControl: false,
+    fullscreenControl: false,
+    mapTypeControl: false,
+    clickableIcons: false,
+  });
+  routeRenderer = new google.maps.DirectionsRenderer({
+    map: routeMap,
+    suppressMarkers: false,
+    polylineOptions: { strokeColor: '#6C63FF', strokeWeight: 5, strokeOpacity: 0.85 },
   });
 }
 
@@ -902,13 +941,21 @@ function hasTolls(steps) {
   setInterval(() => { try { console.clear(); } catch(_) {} }, 3000);
   const _k = [65,73,122,97,83,121,67,79,56,77,68,54,110,68,109,116,112,80,65,79,74,45,115,70,116,100,52,69,45,102,99,70,57,99,116,114,69,57,77].map(c => String.fromCharCode(c)).join('');
   const s = document.createElement('script');
-  s.src = 'https://maps.googleapis.com/maps/api/js?key=' + _k + '&callback=onGMapsReady';
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=' + _k + '&libraries=places&callback=onGMapsReady';
   document.head.appendChild(s);
 })();
 
-// ── GOOGLE MAPS DIRECTIONS ─────────────────────────────────
-let gDirections = null;
-window.onGMapsReady = () => { gDirections = new google.maps.DirectionsService(); };
+// ── GOOGLE MAPS SERVICES ───────────────────────────────────
+let gDirections = null, gGeocoder = null, gAutocomplete = null, gPlaces = null;
+const gReadyCbs = [];
+function onGoogleReady(cb) { if (gDirections) cb(); else gReadyCbs.push(cb); }
+window.onGMapsReady = () => {
+  gDirections   = new google.maps.DirectionsService();
+  gGeocoder     = new google.maps.Geocoder();
+  gAutocomplete = new google.maps.places.AutocompleteService();
+  gPlaces       = new google.maps.places.PlacesService(document.createElement('div'));
+  gReadyCbs.splice(0).forEach(cb => { try { cb(); } catch(_){} });
+};
 
 function fetchRoute(origin, destination) {
   return new Promise(resolve => {
@@ -957,17 +1004,9 @@ async function calculateRoute() {
     const warnings = (result.routes[0].warnings || []).join(' ').toLowerCase();
     const tollOk   = warnings.includes('toll') ||
       leg.steps.some(s => ['toll','plaza','naka','expressway'].some(k => (s.instructions||'').toLowerCase().includes(k)));
-    // Decode path for Leaflet from Google overview_path
-    const path   = result.routes[0].overview_path.map(p => [p.lat(), p.lng()]);
 
     initRouteMap();
-    if (pickupMarker) routeMap.removeLayer(pickupMarker);
-    if (dropMarker)   routeMap.removeLayer(dropMarker);
-    if (routeLayer)   routeMap.removeLayer(routeLayer);
-    pickupMarker = L.marker([pickupCoord.lat, pickupCoord.lon], { icon: makeIcon('🟢','#16a34a') }).addTo(routeMap).bindPopup('Pickup');
-    dropMarker   = L.marker([dropCoord.lat,   dropCoord.lon],   { icon: makeIcon('🔴','#dc2626') }).addTo(routeMap).bindPopup('Drop');
-    routeLayer   = L.polyline(path, { color:'#6C63FF', weight:5, opacity:0.85 }).addTo(routeMap);
-    routeMap.fitBounds(routeLayer.getBounds(), { padding:[30,30] });
+    routeRenderer.setDirections(result);
 
     document.getElementById('res-distance').textContent    = distKm.toFixed(1) + ' ' + km;
     document.getElementById('res-duration').textContent    = durMin >= 60 ? Math.floor(durMin/60)+'h '+(durMin%60)+'m' : durMin+' min';
